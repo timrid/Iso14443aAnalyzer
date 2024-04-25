@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.13)
 
-project(SimpleSerialAnalyzer)
+project(Iso14443aAnalyzer)
 
 add_definitions( -DLOGIC2 )
 
@@ -13,14 +13,14 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(ExternalAnalyzerSDK)
 
 set(SOURCES 
-src/SimpleSerialAnalyzer.cpp
-src/SimpleSerialAnalyzer.h
-src/SimpleSerialAnalyzerResults.cpp
-src/SimpleSerialAnalyzerResults.h
-src/SimpleSerialAnalyzerSettings.cpp
-src/SimpleSerialAnalyzerSettings.h
-src/SimpleSerialSimulationDataGenerator.cpp
-src/SimpleSerialSimulationDataGenerator.h
+src/Iso14443aAnalyzer.cpp
+src/Iso14443aAnalyzer.h
+src/Iso14443aAnalyzerResults.cpp
+src/Iso14443aAnalyzerResults.h
+src/Iso14443aAnalyzerSettings.cpp
+src/Iso14443aAnalyzerSettings.h
+src/Iso14443aSimulationDataGenerator.cpp
+src/Iso14443aSimulationDataGenerator.h
 )
 
 add_analyzer_plugin(${PROJECT_NAME} SOURCES ${SOURCES})

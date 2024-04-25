@@ -1,28 +1,28 @@
-#include "SimpleSerialAnalyzer.h"
-#include "SimpleSerialAnalyzerSettings.h"
+#include "Iso14443aAnalyzer.h"
+#include "Iso14443aAnalyzerSettings.h"
 #include <AnalyzerChannelData.h>
 
-SimpleSerialAnalyzer::SimpleSerialAnalyzer()
+Iso14443aAnalyzer::Iso14443aAnalyzer()
 :	Analyzer2(),  
-	mSettings( new SimpleSerialAnalyzerSettings() ),
+	mSettings( new Iso14443aAnalyzerSettings() ),
 	mSimulationInitilized( false )
 {
 	SetAnalyzerSettings( mSettings.get() );
 }
 
-SimpleSerialAnalyzer::~SimpleSerialAnalyzer()
+Iso14443aAnalyzer::~Iso14443aAnalyzer()
 {
 	KillThread();
 }
 
-void SimpleSerialAnalyzer::SetupResults()
+void Iso14443aAnalyzer::SetupResults()
 {
-	mResults.reset( new SimpleSerialAnalyzerResults( this, mSettings.get() ) );
+	mResults.reset( new Iso14443aAnalyzerResults( this, mSettings.get() ) );
 	SetAnalyzerResults( mResults.get() );
 	mResults->AddChannelBubblesWillAppearOn( mSettings->mInputChannel );
 }
 
-void SimpleSerialAnalyzer::WorkerThread()
+void Iso14443aAnalyzer::WorkerThread()
 {
 	mSampleRateHz = GetSampleRate();
 
@@ -72,12 +72,12 @@ void SimpleSerialAnalyzer::WorkerThread()
 	}
 }
 
-bool SimpleSerialAnalyzer::NeedsRerun()
+bool Iso14443aAnalyzer::NeedsRerun()
 {
 	return false;
 }
 
-U32 SimpleSerialAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate, SimulationChannelDescriptor** simulation_channels )
+U32 Iso14443aAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate, SimulationChannelDescriptor** simulation_channels )
 {
 	if( mSimulationInitilized == false )
 	{
@@ -88,24 +88,24 @@ U32 SimpleSerialAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 
 	return mSimulationDataGenerator.GenerateSimulationData( minimum_sample_index, device_sample_rate, simulation_channels );
 }
 
-U32 SimpleSerialAnalyzer::GetMinimumSampleRateHz()
+U32 Iso14443aAnalyzer::GetMinimumSampleRateHz()
 {
 	return mSettings->mBitRate * 4;
 }
 
-const char* SimpleSerialAnalyzer::GetAnalyzerName() const
+const char* Iso14443aAnalyzer::GetAnalyzerName() const
 {
-	return "Simple Serial";
+	return "ISO 14443a RFID";
 }
 
 const char* GetAnalyzerName()
 {
-	return "Simple Serial";
+	return "ISO 14443a RFID";
 }
 
 Analyzer* CreateAnalyzer()
 {
-	return new SimpleSerialAnalyzer();
+	return new Iso14443aAnalyzer();
 }
 
 void DestroyAnalyzer( Analyzer* analyzer )

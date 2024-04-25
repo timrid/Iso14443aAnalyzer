@@ -1,16 +1,16 @@
-#ifndef SIMPLESERIAL_ANALYZER_RESULTS
-#define SIMPLESERIAL_ANALYZER_RESULTS
+#ifndef ISO14443A_ANALYZER_RESULTS
+#define ISO14443A_ANALYZER_RESULTS
 
 #include <AnalyzerResults.h>
 
-class SimpleSerialAnalyzer;
-class SimpleSerialAnalyzerSettings;
+class Iso14443aAnalyzer;
+class Iso14443aAnalyzerSettings;
 
-class SimpleSerialAnalyzerResults : public AnalyzerResults
+class Iso14443aAnalyzerResults : public AnalyzerResults
 {
 public:
-	SimpleSerialAnalyzerResults( SimpleSerialAnalyzer* analyzer, SimpleSerialAnalyzerSettings* settings );
-	virtual ~SimpleSerialAnalyzerResults();
+	Iso14443aAnalyzerResults( Iso14443aAnalyzer* analyzer, Iso14443aAnalyzerSettings* settings );
+	virtual ~Iso14443aAnalyzerResults();
 
 	virtual void GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base );
 	virtual void GenerateExportFile( const char* file, DisplayBase display_base, U32 export_type_user_id );
@@ -22,8 +22,8 @@ public:
 protected: //functions
 
 protected:  //vars
-	SimpleSerialAnalyzerSettings* mSettings;
-	SimpleSerialAnalyzer* mAnalyzer;
+	Iso14443aAnalyzerSettings* mSettings;
+	Iso14443aAnalyzer* mAnalyzer;
 };
 
-#endif //SIMPLESERIAL_ANALYZER_RESULTS
+#endif //ISO14443A_ANALYZER_RESULTS

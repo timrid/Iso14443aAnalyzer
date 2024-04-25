@@ -1,16 +1,16 @@
-#ifndef SIMPLESERIAL_ANALYZER_H
-#define SIMPLESERIAL_ANALYZER_H
+#ifndef ISO14443A_ANALYZER_H
+#define ISO14443A_ANALYZER_H
 
 #include <Analyzer.h>
-#include "SimpleSerialAnalyzerResults.h"
-#include "SimpleSerialSimulationDataGenerator.h"
+#include "Iso14443aAnalyzerResults.h"
+#include "Iso14443aSimulationDataGenerator.h"
 
-class SimpleSerialAnalyzerSettings;
-class ANALYZER_EXPORT SimpleSerialAnalyzer : public Analyzer2
+class Iso14443aAnalyzerSettings;
+class ANALYZER_EXPORT Iso14443aAnalyzer : public Analyzer2
 {
 public:
-	SimpleSerialAnalyzer();
-	virtual ~SimpleSerialAnalyzer();
+	Iso14443aAnalyzer();
+	virtual ~Iso14443aAnalyzer();
 
 	virtual void SetupResults();
 	virtual void WorkerThread();
@@ -22,11 +22,11 @@ public:
 	virtual bool NeedsRerun();
 
 protected: //vars
-	std::auto_ptr< SimpleSerialAnalyzerSettings > mSettings;
-	std::auto_ptr< SimpleSerialAnalyzerResults > mResults;
+	std::auto_ptr< Iso14443aAnalyzerSettings > mSettings;
+	std::auto_ptr< Iso14443aAnalyzerResults > mResults;
 	AnalyzerChannelData* mSerial;
 
-	SimpleSerialSimulationDataGenerator mSimulationDataGenerator;
+	Iso14443aSimulationDataGenerator mSimulationDataGenerator;
 	bool mSimulationInitilized;
 
 	//Serial analysis vars:
@@ -39,4 +39,4 @@ extern "C" ANALYZER_EXPORT const char* __cdecl GetAnalyzerName();
 extern "C" ANALYZER_EXPORT Analyzer* __cdecl CreateAnalyzer( );
 extern "C" ANALYZER_EXPORT void __cdecl DestroyAnalyzer( Analyzer* analyzer );
 
-#endif //SIMPLESERIAL_ANALYZER_H
+#endif //ISO14443A_ANALYZER_H
