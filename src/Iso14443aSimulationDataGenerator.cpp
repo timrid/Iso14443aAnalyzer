@@ -18,7 +18,7 @@ void Iso14443aSimulationDataGenerator::Initialize( U32 simulation_sample_rate, I
 	mSimulationSampleRateHz = simulation_sample_rate;
 	mSettings = settings;
 
-	mSerialSimulationData.SetChannel( mSettings->mInputChannel );
+	mSerialSimulationData.SetChannel( mSettings->mAskInputChannel );
 	mSerialSimulationData.SetSampleRate( simulation_sample_rate );
 	mSerialSimulationData.SetInitialBitState( BIT_HIGH );
 }
@@ -38,7 +38,7 @@ U32 Iso14443aSimulationDataGenerator::GenerateSimulationData( U64 largest_sample
 
 void Iso14443aSimulationDataGenerator::CreateSerialByte()
 {
-	U32 samples_per_bit = mSimulationSampleRateHz / mSettings->mBitRate;
+	U32 samples_per_bit = mSimulationSampleRateHz / 1000;//mSettings->mBitRate;
 
 	U8 byte = mSerialText[ mStringIndex ];
 	mStringIndex++;

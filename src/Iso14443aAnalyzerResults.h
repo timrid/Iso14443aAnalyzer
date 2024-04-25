@@ -3,6 +3,12 @@
 
 #include <AnalyzerResults.h>
 
+static const U8 FRAME_TYPE_BYTE = 0;
+static const U8 FRAME_TYPE_SOC = 1;
+static const U8 FRAME_TYPE_EOC = 2;
+
+static const U8 FRAME_FLAG_PARITY_ERROR = 1;
+
 class Iso14443aAnalyzer;
 class Iso14443aAnalyzerSettings;
 
