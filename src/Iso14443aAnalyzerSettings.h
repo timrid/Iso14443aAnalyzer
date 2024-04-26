@@ -4,26 +4,35 @@
 #include <AnalyzerSettings.h>
 #include <AnalyzerTypes.h>
 
-class Iso14443aAnalyzerSettings : public AnalyzerSettings
+enum AskOutputFormat
 {
-public:
-	Iso14443aAnalyzerSettings();
-	virtual ~Iso14443aAnalyzerSettings();
-
-	virtual bool SetSettingsFromInterfaces();
-	void UpdateInterfacesFromSettings();
-	virtual void LoadSettings( const char* settings );
-	virtual const char* SaveSettings();
-
-
-	Channel mAskInputChannel;
-	BitState mAskIdleState;
-	Channel mLoadmodInputChannel;
-
-protected:
-	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mAskInputChannelInterface;
-	std::auto_ptr< AnalyzerSettingInterfaceNumberList >	mAskIdleStateInterface;
-	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mLoadmodInputChannelInterface;
+    Sequences = 0,
+    Bytes = 1,
+    Frames = 2,
 };
 
-#endif //ISO14443A_ANALYZER_SETTINGS
+class Iso14443aAnalyzerSettings : public AnalyzerSettings
+{
+  public:
+    Iso14443aAnalyzerSettings();
+    virtual ~Iso14443aAnalyzerSettings();
+
+    virtual bool SetSettingsFromInterfaces();
+    void UpdateInterfacesFromSettings();
+    virtual void LoadSettings( const char* settings );
+    virtual const char* SaveSettings();
+
+
+    Channel mAskInputChannel;
+    BitState mAskIdleState;
+    AskOutputFormat mAskOutputFormat;
+    Channel mLoadmodInputChannel;
+
+  protected:
+    std::unique_ptr<AnalyzerSettingInterfaceChannel> mAskInputChannelInterface;
+    std::unique_ptr<AnalyzerSettingInterfaceNumberList> mAskIdleStateInterface;
+    std::unique_ptr<AnalyzerSettingInterfaceNumberList> mAskOutputFormatInterface;
+    std::unique_ptr<AnalyzerSettingInterfaceChannel> mLoadmodInputChannelInterface;
+};
+
+#endif // ISO14443A_ANALYZER_SETTINGS

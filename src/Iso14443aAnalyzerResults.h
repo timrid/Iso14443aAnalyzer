@@ -3,11 +3,19 @@
 
 #include <AnalyzerResults.h>
 
-static const U8 FRAME_TYPE_BYTE = 0;
-static const U8 FRAME_TYPE_SOC = 1;
-static const U8 FRAME_TYPE_EOC = 2;
+static const U8 FRAME_TYPE_SEQUENCES_SEQUENCE = 0;
+static const U8 FRAME_TYPE_BYTES_BYTE = 1;
+static const U8 FRAME_TYPE_BYTES_SOC = 2;
+static const U8 FRAME_TYPE_BYTES_EOC = 3;
+static const U8 FRAME_TYPE_FRAMES_FRAME = 4;
+
 
 static const U8 FRAME_FLAG_PARITY_ERROR = 1;
+
+static const U8 ASK_SEQ_X = 0b01;
+static const U8 ASK_SEQ_Y = 0b00;
+static const U8 ASK_SEQ_Z = 0b10;
+static const U8 ASK_SEQ_ERROR = 0b100;
 
 class Iso14443aAnalyzer;
 class Iso14443aAnalyzerSettings;

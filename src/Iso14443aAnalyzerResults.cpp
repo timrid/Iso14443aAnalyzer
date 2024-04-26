@@ -14,12 +14,13 @@ Iso14443aAnalyzerResults::~Iso14443aAnalyzerResults()
 {
 }
 
+
 void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base )
 {
     ClearResultStrings();
     Frame frame = GetFrame( frame_index );
 
-    if( frame.mType == FRAME_TYPE_BYTE )
+    if( frame.mType == FRAME_TYPE_BYTES_BYTE )
     {
         char number_str[ 128 ];
         AnalyzerHelpers::GetNumberString( frame.mData1, display_base, U32( frame.mData2 ), number_str, 128 );
@@ -37,13 +38,31 @@ void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& cha
         }
         AddResultString( number_str, hint_str, error_str );
     }
-    else if( frame.mType == FRAME_TYPE_SOC )
+    else if( frame.mType == FRAME_TYPE_BYTES_SOC )
     {
         AddResultString( "SOC" );
     }
-    else if( frame.mType == FRAME_TYPE_EOC )
+    else if( frame.mType == FRAME_TYPE_BYTES_EOC )
     {
         AddResultString( "EOC" );
+    }
+    else if( frame.mType == FRAME_TYPE_SEQUENCES_SEQUENCE )
+    {
+        switch( frame.mData1 )
+        {
+        case ASK_SEQ_X:
+            AddResultString( "X" );
+            break;
+        case ASK_SEQ_Y:
+            AddResultString( "Y" );
+            break;
+        case ASK_SEQ_Z:
+            AddResultString( "Z" );
+            break;
+        default:
+            AddResultString( "ERROR" );
+            break;
+        }
     }
 }
 

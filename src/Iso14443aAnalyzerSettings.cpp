@@ -15,12 +15,20 @@ Iso14443aAnalyzerSettings::Iso14443aAnalyzerSettings()
     mAskIdleStateInterface->AddNumber( BIT_HIGH, "IDLE High", "" );
     mAskIdleStateInterface->SetNumber( mAskIdleState );
 
+    mAskOutputFormatInterface.reset( new AnalyzerSettingInterfaceNumberList() );
+    mAskOutputFormatInterface->SetTitleAndTooltip( "PCD->PICC (ASK) Output Format", "" );
+    mAskOutputFormatInterface->AddNumber( AskOutputFormat::Sequences, "Sequences", "" );
+    mAskOutputFormatInterface->AddNumber( AskOutputFormat::Bytes, "Bytes", "" );
+    mAskOutputFormatInterface->AddNumber( AskOutputFormat::Frames, "Frames", "" );
+    mAskOutputFormatInterface->SetNumber( mAskOutputFormat );
+
     mLoadmodInputChannelInterface.reset( new AnalyzerSettingInterfaceChannel() );
     mLoadmodInputChannelInterface->SetTitleAndTooltip( "PICC->PCD (Loadmod)", "PICC->PCD (Loadmodulation)" );
     mLoadmodInputChannelInterface->SetChannel( mLoadmodInputChannel );
 
     AddInterface( mAskInputChannelInterface.get() );
     AddInterface( mAskIdleStateInterface.get() );
+    AddInterface( mAskOutputFormatInterface.get() );
     AddInterface( mLoadmodInputChannelInterface.get() );
 
     AddExportOption( 0, "Export as text/csv file" );
@@ -40,6 +48,7 @@ bool Iso14443aAnalyzerSettings::SetSettingsFromInterfaces()
 {
     mAskInputChannel = mAskInputChannelInterface->GetChannel();
     mAskIdleState = ( BitState )U32( mAskIdleStateInterface->GetNumber() );
+    mAskOutputFormat = ( AskOutputFormat )U32( mAskOutputFormatInterface->GetNumber() );
     mLoadmodInputChannel = mLoadmodInputChannelInterface->GetChannel();
 
     ClearChannels();
@@ -53,6 +62,7 @@ void Iso14443aAnalyzerSettings::UpdateInterfacesFromSettings()
 {
     mAskInputChannelInterface->SetChannel( mAskInputChannel );
     mAskIdleStateInterface->SetNumber( mAskIdleState );
+    mAskOutputFormatInterface->SetNumber( mAskOutputFormat );
     mLoadmodInputChannelInterface->SetChannel( mLoadmodInputChannel );
 }
 
@@ -63,6 +73,7 @@ void Iso14443aAnalyzerSettings::LoadSettings( const char* settings )
 
     text_archive >> mAskInputChannel;
     text_archive >> *( U32* )&mAskIdleState;
+    text_archive >> *( U32* )&mAskOutputFormat;
     text_archive >> mLoadmodInputChannel;
 
     ClearChannels();
@@ -78,6 +89,7 @@ const char* Iso14443aAnalyzerSettings::SaveSettings()
 
     text_archive << mAskInputChannel;
     text_archive << mAskIdleState;
+    text_archive << mAskOutputFormat;
     text_archive << mLoadmodInputChannel;
 
     return SetReturnString( text_archive.GetString() );
