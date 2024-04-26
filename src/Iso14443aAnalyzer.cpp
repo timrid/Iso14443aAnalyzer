@@ -13,6 +13,7 @@ U32 FREQ_CARRIER = 13560000;
 Iso14443aAnalyzer::Iso14443aAnalyzer() : Analyzer2(), mSettings( new Iso14443aAnalyzerSettings() ), mSimulationInitilized( false )
 {
     SetAnalyzerSettings( mSettings.get() );
+    UseFrameV2();
 }
 
 Iso14443aAnalyzer::~Iso14443aAnalyzer()
@@ -215,9 +216,7 @@ void Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
         {
             U64 eoc_starting_sample = std::get<1>( last_bit );
             U64 eoc_ending_sample = U64( eoc_starting_sample + ( 2 * mAskSamplesPerBit ) ) - 1;
-
-            printf( "eoc_starting_sample=%llu\n", eoc_starting_sample );
-            printf( "eoc_ending_sample=%llu\n\n", eoc_ending_sample );
+            ask_frame.frame_end_sample = eoc_ending_sample;
 
             if( mAskOutputFormat == AskOutputFormat::Bytes )
             {
@@ -226,6 +225,12 @@ void Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
                 frame.mStartingSampleInclusive = eoc_starting_sample;
                 frame.mEndingSampleInclusive = eoc_ending_sample;
                 mResults->AddFrame( frame );
+
+                FrameV2 frameV2;
+                frameV2.AddByteArray( "frame", ask_frame.data.data(), ask_frame.data.size() );
+                frameV2.AddInteger( "valid_bits_of_last_byte", ask_frame.data_valid_bits_in_last_byte );
+                mResults->AddFrameV2( frameV2, "pcd_to_picc", ask_frame.frame_start_sample, ask_frame.frame_end_sample );
+
                 mResults->CommitResults();
                 ReportProgress( frame.mEndingSampleInclusive );
             }
