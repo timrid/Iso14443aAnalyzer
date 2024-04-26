@@ -4,7 +4,7 @@
 #include "Iso14443aAnalyzerSettings.h"
 #include <iostream>
 #include <fstream>
-#include <stdio>
+#include <stdio.h>
 
 Iso14443aAnalyzerResults::Iso14443aAnalyzerResults( Iso14443aAnalyzer* analyzer, Iso14443aAnalyzerSettings* settings )
     : AnalyzerResults(), mSettings( settings ), mAnalyzer( analyzer )
