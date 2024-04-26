@@ -94,13 +94,13 @@ void Iso14443aAnalyzer::ReceiveAskFrame()
     Frame frame;
     frame.mType = FRAME_TYPE_SOC;
     frame.mStartingSampleInclusive = seq_start_sample;
-    frame.mEndingSampleInclusive = S64( seq_start_sample + mAskSamplesPerBit );
+    frame.mEndingSampleInclusive = S64( seq_start_sample + mAskSamplesPerBit ) - 1;
     mResults->AddFrame( frame );
     mResults->CommitResults();
     ReportProgress( frame.mEndingSampleInclusive );
 
     // last_bit must be 0, because a logic "0" followed by the start of communication must begin with SeqZ instead of SeqY
-    std::tuple<U8, U64> last_bit = { 0, 0 };
+    std::tuple<U8, U64> last_bit = { 0, frame.mEndingSampleInclusive };
     bool eoc = false;
 
     std::deque<std::tuple<U8, U64>> bit_buffer;
@@ -169,7 +169,7 @@ void Iso14443aAnalyzer::ReceiveAskFrame()
                 frame.mType = FRAME_TYPE_BYTE;
                 frame.mFlags = parityError == true ? FRAME_FLAG_PARITY_ERROR : 0;
                 frame.mStartingSampleInclusive = starting_sample;
-                frame.mEndingSampleInclusive = S64( ending_sample + mAskSamplesPerBit );
+                frame.mEndingSampleInclusive = S64( ending_sample + mAskSamplesPerBit ) - 1;
                 mResults->AddFrame( frame );
                 mResults->CommitResults();
                 ReportProgress( frame.mEndingSampleInclusive );
@@ -179,7 +179,7 @@ void Iso14443aAnalyzer::ReceiveAskFrame()
         if( eoc == true )
         {
             U64 starting_sample = std::get<1>( last_bit );
-            U64 ending_sample = U64( starting_sample + ( 2 * mAskSamplesPerBit ) );
+            U64 ending_sample = U64( starting_sample + ( 2 * mAskSamplesPerBit ) ) - 1;
 
             Frame frame;
             frame.mType = FRAME_TYPE_EOC;
