@@ -5,6 +5,27 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <cstdarg>
+#include <string>
+
+std::string format_string( char const* const format, ... )
+{
+    // see https://stackoverflow.com/a/52184144
+
+    // get length of output
+    va_list args;
+    va_start( args, format );
+    size_t len = std::vsnprintf( NULL, 0, format, args );
+    va_end( args );
+
+    // create vector and print the output to the vector
+    std::vector<char> vec( len + 1 );
+    va_start( args, format );
+    std::vsnprintf( &vec[ 0 ], len + 1, format, args );
+    va_end( args );
+
+    return std::string( &vec[ 0 ] );
+}
 
 Iso14443aAnalyzerResults::Iso14443aAnalyzerResults( Iso14443aAnalyzer* analyzer, Iso14443aAnalyzerSettings* settings )
     : AnalyzerResults(), mSettings( settings ), mAnalyzer( analyzer )
@@ -26,18 +47,18 @@ void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& cha
         char number_str[ 128 ];
         AnalyzerHelpers::GetNumberString( frame.mData1, display_base, U32( frame.mData2 ), number_str, 128 );
 
-        char hint_str[ 128 ] = "";
+        std::string hint_str = "";
         if( frame.mData2 != 8 )
         {
-            snprintf( hint_str, 128, " (%d Bits)", U8( frame.mData2 ) );
+            hint_str = format_string( " (%d Bits)", U8( frame.mData2 ) );
         }
 
-        char error_str[ 128 ] = "";
+        std::string error_str = "";
         if( frame.mFlags & FRAME_FLAG_PARITY_ERROR )
         {
-            snprintf( error_str, 128, " (Parity Error)" );
+            error_str = format_string( " (Parity Error)" );
         }
-        AddResultString( number_str, hint_str, error_str );
+        AddResultString( number_str, hint_str.c_str(), error_str.c_str() );
     }
     else if( frame.mType == FRAME_TYPE_BYTES_SOC )
     {
