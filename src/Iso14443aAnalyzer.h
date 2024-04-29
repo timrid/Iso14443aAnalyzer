@@ -38,7 +38,7 @@ class ANALYZER_EXPORT Iso14443aAnalyzer : public Analyzer2
 
         U32 seq_num{ 0U }; // sequence count of complete frame
 
-        std::vector<U8> data{ 0U };            // data of the frame
+        std::vector<U8> data;                  // data of the frame
         U8 data_valid_bits_in_last_byte{ 0U }; // the last data byte can be incomplete, so here are the valid bit count saved
 
         enum class AskError
