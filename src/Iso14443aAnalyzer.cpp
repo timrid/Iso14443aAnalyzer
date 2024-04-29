@@ -29,10 +29,16 @@ void Iso14443aAnalyzer::SetupResults()
 }
 
 
-U8 Iso14443aAnalyzer::ReceiveAskSeq( U64 seq_start_sample )
+std::tuple<U8, U64> Iso14443aAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
 {
     U32 bit_changes = 0;
     U8 seq = 0;
+
+    U64 seq_start_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
+    ask_frame.seq_num++;
+
+    // save last received sample
+    ask_frame.frame_end_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
 
     // mark start of sequence
     mResults->AddMarker( U64( seq_start_sample ), AnalyzerResults::Start, mSettings->mAskInputChannel );
@@ -41,7 +47,7 @@ U8 Iso14443aAnalyzer::ReceiveAskSeq( U64 seq_start_sample )
     bit_changes = mAskSerial->AdvanceToAbsPosition( U64( seq_start_sample + mAskOffsetToFrameStart ) );
     if( bit_changes > 1 )
     {
-        return ASK_SEQ_ERROR;
+        return { ASK_SEQ_ERROR, seq_start_sample };
     }
 
     // mark sampling point
@@ -55,7 +61,7 @@ U8 Iso14443aAnalyzer::ReceiveAskSeq( U64 seq_start_sample )
     bit_changes = mAskSerial->AdvanceToAbsPosition( U64( seq_start_sample + mAskOffsetToFrameStart + ( mAskSamplesPerBit / 2 ) ) );
     if( bit_changes > 1 )
     {
-        return ASK_SEQ_ERROR;
+        return { ASK_SEQ_ERROR, seq_start_sample };
     }
 
     // mark sampling point
@@ -77,25 +83,25 @@ U8 Iso14443aAnalyzer::ReceiveAskSeq( U64 seq_start_sample )
         ReportProgress( frame.mEndingSampleInclusive );
     }
 
-    return seq;
+    return { seq, seq_start_sample };
 }
 
 
-void Iso14443aAnalyzer::ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame )
+Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame )
 {
     // wait for edge as start condition (eg. rising edge)
     mAskSerial->AdvanceToNextEdge();
     ask_frame.frame_start_sample = mAskSerial->GetSampleNumber();
+    ask_frame.seq_num = 0;
 
     // detect start of communication
-    ask_frame.seq_num = 0;
-    U8 seq = ReceiveAskSeq( ask_frame.frame_start_sample );
-    ask_frame.seq_num++;
+    auto seq = ReceiveAskSeq( ask_frame );
 
-    if( seq != ASK_SEQ_Z )
+    if( std::get<0>( seq ) != ASK_SEQ_Z )
     {
         // ERROR
-        return;
+        ask_frame.error = AskFrame::AskError::ErrorWrongSoc;
+        return ask_frame.error;
     }
 
     // Save SOC
@@ -109,47 +115,45 @@ void Iso14443aAnalyzer::ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame
         mResults->CommitResults();
         ReportProgress( frame.mEndingSampleInclusive );
     }
+
+    return AskFrame::AskError::Ok;
 }
 
 
-void Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
+Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
 {
     bool end_of_communication = false;
 
     std::deque<std::tuple<U8, U64>> bit_buffer;
 
-    U64 seq_start_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
-    ask_frame.data_start_sample = seq_start_sample;
 
     // last_bit must be 0, because a logic "0" followed by the start of communication must begin with SeqZ instead of SeqY
-    std::tuple<U8, U64> last_bit = { 0, seq_start_sample };
+    std::tuple<U8, U64> last_bit = { 0, ask_frame.frame_end_sample };
 
     while( true )
     {
-        seq_start_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
-        U8 seq = ReceiveAskSeq( seq_start_sample );
-        ask_frame.seq_num++;
+        auto seq = ReceiveAskSeq( ask_frame );
 
-        if( seq == ASK_SEQ_X )
+        if( std::get<0>( seq ) == ASK_SEQ_X )
         {
             // logic "1"
-            last_bit = { 1, seq_start_sample };
+            last_bit = { 1, std::get<1>( seq ) };
         }
-        else if( ( ( std::get<0>( last_bit ) == 0 ) && ( seq == ASK_SEQ_Z ) ) ||
-                 ( ( std::get<0>( last_bit ) == 1 ) && ( seq == ASK_SEQ_Y ) ) )
+        else if( ( ( std::get<0>( last_bit ) == 0 ) && ( std::get<0>( seq ) == ASK_SEQ_Z ) ) ||
+                 ( ( std::get<0>( last_bit ) == 1 ) && ( std::get<0>( seq ) == ASK_SEQ_Y ) ) )
         {
             // logic "0"
-            last_bit = { 0, seq_start_sample };
+            last_bit = { 0, std::get<1>( seq ) };
         }
-        else if( ( std::get<0>( last_bit ) == 0 ) && ( seq == ASK_SEQ_Y ) )
+        else if( ( std::get<0>( last_bit ) == 0 ) && ( std::get<0>( seq ) == ASK_SEQ_Y ) )
         {
             end_of_communication = true;
         }
         else
         {
-            ask_frame.error = true;
             // ERROR
-            return;
+            ask_frame.error = AskFrame::AskError::ErrorWrongSequence;
+            return ask_frame.error;
         }
 
         bool byte_complete = bit_buffer.size() == 9; // 8 data bits + 1 parity bit
@@ -187,6 +191,7 @@ void Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
                     if( AnalyzerHelpers::IsOdd( AnalyzerHelpers::GetOnesCount( byte ) ) == bool( parity_bit ) )
                     {
                         frame_flags = FRAME_FLAG_PARITY_ERROR;
+                        ask_frame.error = AskFrame::AskError::ErrorParity;
                     }
                 }
 
@@ -194,7 +199,6 @@ void Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
 
                 ask_frame.data.push_back( byte );
                 ask_frame.data_valid_bits_in_last_byte = bits_in_byte;
-                ask_frame.data_end_sample = bit_ending_sample;
 
                 if( mAskOutputFormat == AskOutputFormat::Bytes )
                 {
@@ -225,12 +229,6 @@ void Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
                 frame.mStartingSampleInclusive = eoc_starting_sample;
                 frame.mEndingSampleInclusive = eoc_ending_sample;
                 mResults->AddFrame( frame );
-
-                FrameV2 frameV2;
-                frameV2.AddByteArray( "frame", ask_frame.data.data(), ask_frame.data.size() );
-                frameV2.AddInteger( "valid_bits_of_last_byte", ask_frame.data_valid_bits_in_last_byte );
-                mResults->AddFrameV2( frameV2, "pcd_to_picc", ask_frame.frame_start_sample, ask_frame.frame_end_sample );
-
                 mResults->CommitResults();
                 ReportProgress( frame.mEndingSampleInclusive );
             }
@@ -246,11 +244,47 @@ void Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
     }
 }
 
+void Iso14443aAnalyzer::ReportAskFrame( AskFrame& ask_frame )
+{
+    FrameV2 frameV2;
+
+    frameV2.AddByteArray( "value", ask_frame.data.data(), ask_frame.data.size() );
+    const char* status = "";
+    switch( ask_frame.error )
+    {
+    case AskFrame::AskError::Ok:
+        status = "OK";
+        break;
+    case AskFrame::AskError::ErrorWrongSoc:
+        status = "SOC_ERROR";
+        break;
+    case AskFrame::AskError::ErrorWrongSequence:
+        status = "SEQUENCE_ERROR";
+        break;
+    case AskFrame::AskError::ErrorParity:
+        status = "PARITY_ERROR";
+        break;
+    };
+    frameV2.AddString( "status", status );
+    frameV2.AddInteger( "valid_bits_of_last_byte", ask_frame.data_valid_bits_in_last_byte );
+    mResults->AddFrameV2( frameV2, "pcd_to_picc_raw", ask_frame.frame_start_sample, ask_frame.frame_end_sample );
+
+    mResults->CommitResults();
+    ReportProgress( ask_frame.frame_end_sample );
+}
+
 void Iso14443aAnalyzer::ReceiveAskFrame()
 {
     AskFrame ask_frame;
-    ReceiveAskFrameStartOfCommunication( ask_frame );
-    ReceiveAskFrameData( ask_frame );
+    AskFrame::AskError ask_error;
+
+    ask_error = ReceiveAskFrameStartOfCommunication( ask_frame );
+    if( ask_error == AskFrame::AskError::Ok )
+    {
+        ask_error = ReceiveAskFrameData( ask_frame );
+    }
+
+    ReportAskFrame( ask_frame );
 }
 
 void Iso14443aAnalyzer::WorkerThread()

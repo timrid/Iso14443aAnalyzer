@@ -32,20 +32,29 @@ class ANALYZER_EXPORT Iso14443aAnalyzer : public Analyzer2
     struct AskFrame
     {
         U64 frame_start_sample{ 0U }; // first sample of frame
-        U64 data_start_sample{ 0U };  // fist sample of the data of the frame
-        U64 data_end_sample{ 0U };  // last sample of the data of the frame
+        // U64 data_start_sample{ 0U };  // fist sample of the data of the frame
+        // U64 data_end_sample{ 0U };    // last sample of the data of the frame
         U64 frame_end_sample{ 0U }; // last sample of frame
 
-        U32 seq_num{ 0U };            // sequence count of complete frame
+        U32 seq_num{ 0U }; // sequence count of complete frame
 
         std::vector<U8> data{ 0U };            // data of the frame
         U8 data_valid_bits_in_last_byte{ 0U }; // the last data byte can be incomplete, so here are the valid bit count saved
-        bool error{ false };
+
+        enum class AskError
+        {
+            Ok = 0,
+            ErrorWrongSoc = 1,
+            ErrorWrongSequence = 2,
+            ErrorParity = 3,
+        };
+        AskError error{ AskError::Ok };
     };
 
-    U8 ReceiveAskSeq( U64 seq_start_sample );
-    void ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame );
-    void ReceiveAskFrameData( AskFrame& ask_frame );
+    std::tuple<U8, U64> ReceiveAskSeq( AskFrame& ask_fram );
+    AskFrame::AskError ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame );
+    AskFrame::AskError ReceiveAskFrameData( AskFrame& ask_frame );
+    void ReportAskFrame( AskFrame& ask_frame );
     void ReceiveAskFrame();
 
     std::unique_ptr<Iso14443aAnalyzerSettings> mSettings;
