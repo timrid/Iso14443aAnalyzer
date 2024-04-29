@@ -4,6 +4,7 @@
 #include "Iso14443aAnalyzerSettings.h"
 #include <iostream>
 #include <fstream>
+#include <stdio.h>
 
 Iso14443aAnalyzerResults::Iso14443aAnalyzerResults( Iso14443aAnalyzer* analyzer, Iso14443aAnalyzerSettings* settings )
     : AnalyzerResults(), mSettings( settings ), mAnalyzer( analyzer )
@@ -28,13 +29,13 @@ void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& cha
         char hint_str[ 128 ] = "";
         if( frame.mData2 != 8 )
         {
-            sprintf_s( hint_str, sizeof( hint_str ), " (%d Bits)", U8( frame.mData2 ) );
+            snprintf( hint_str, 128, " (%d Bits)", U8( frame.mData2 ) );
         }
 
         char error_str[ 128 ] = "";
         if( frame.mFlags & FRAME_FLAG_PARITY_ERROR )
         {
-            sprintf_s( error_str, sizeof( error_str ), " (Parity Error)" );
+            snprintf( error_str, 128, " (Parity Error)" );
         }
         AddResultString( number_str, hint_str, error_str );
     }
