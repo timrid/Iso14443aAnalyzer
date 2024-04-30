@@ -1,5 +1,5 @@
-#ifndef ISO14443A_ASK_ANALYZER_SETTINGS
-#define ISO14443A_ASK_ANALYZER_SETTINGS
+#ifndef ISO14443A_LOADMOD_ANALYZER_SETTINGS
+#define ISO14443A_LOADMOD_ANALYZER_SETTINGS
 
 #include <AnalyzerSettings.h>
 #include <AnalyzerTypes.h>
@@ -10,11 +10,11 @@ enum AskOutputFormat
     Bytes = 1,
 };
 
-class Iso14443aAskAnalyzerSettings : public AnalyzerSettings
+class Iso14443aLoadmodAnalyzerSettings : public AnalyzerSettings
 {
   public:
-    Iso14443aAskAnalyzerSettings();
-    virtual ~Iso14443aAskAnalyzerSettings();
+    Iso14443aLoadmodAnalyzerSettings();
+    virtual ~Iso14443aLoadmodAnalyzerSettings();
 
     virtual bool SetSettingsFromInterfaces();
     void UpdateInterfacesFromSettings();
@@ -32,4 +32,4 @@ class Iso14443aAskAnalyzerSettings : public AnalyzerSettings
     std::unique_ptr<AnalyzerSettingInterfaceNumberList> mAskOutputFormatInterface;
 };
 
-#endif // ISO14443A_ASK_ANALYZER_SETTINGS
+#endif // ISO14443A_LOADMOD_ANALYZER_SETTINGS

@@ -1,10 +1,10 @@
-#ifndef ISO14443A_ASK_ANALYZER_H
-#define ISO14443A_ASK_ANALYZER_H
+#ifndef ISO14443A_LOADMOD_ANALYZER_H
+#define ISO14443A_LOADMOD_ANALYZER_H
 
 #include <Analyzer.h>
-#include "Iso14443aAskAnalyzerResults.h"
-#include "Iso14443aAskAnalyzerSettings.h"
-#include "Iso14443aAskSimulationDataGenerator.h"
+#include "Iso14443aLoadmodAnalyzerResults.h"
+#include "Iso14443aLoadmodAnalyzerSettings.h"
+#include "Iso14443aLoadmodSimulationDataGenerator.h"
 
 
 class Iso14443aPcdFrame
@@ -12,12 +12,12 @@ class Iso14443aPcdFrame
 };
 
 
-class Iso14443aAskAnalyzerSettings;
-class ANALYZER_EXPORT Iso14443aAskAnalyzer : public Analyzer2
+class Iso14443aLoadmodAnalyzerSettings;
+class ANALYZER_EXPORT Iso14443aLoadmodAnalyzer : public Analyzer2
 {
   public:
-    Iso14443aAskAnalyzer();
-    virtual ~Iso14443aAskAnalyzer();
+    Iso14443aLoadmodAnalyzer();
+    virtual ~Iso14443aLoadmodAnalyzer();
 
     virtual void SetupResults();
     virtual void WorkerThread();
@@ -55,11 +55,11 @@ class ANALYZER_EXPORT Iso14443aAskAnalyzer : public Analyzer2
     void ReportAskFrame( AskFrame& ask_frame );
     void ReceiveAskFrame();
 
-    std::unique_ptr<Iso14443aAskAnalyzerSettings> mSettings;
-    std::unique_ptr<Iso14443aAskAnalyzerResults> mResults;
+    std::unique_ptr<Iso14443aLoadmodAnalyzerSettings> mSettings;
+    std::unique_ptr<Iso14443aLoadmodAnalyzerResults> mResults;
     AnalyzerChannelData* mAskSerial;
 
-    Iso14443aAskSimulationDataGenerator mSimulationDataGenerator;
+    Iso14443aLoadmodSimulationDataGenerator mSimulationDataGenerator;
     bool mSimulationInitilized;
 
     // Serial analysis vars:
@@ -78,4 +78,4 @@ extern "C" ANALYZER_EXPORT const char* __cdecl GetAnalyzerName();
 extern "C" ANALYZER_EXPORT Analyzer* __cdecl CreateAnalyzer();
 extern "C" ANALYZER_EXPORT void __cdecl DestroyAnalyzer( Analyzer* analyzer );
 
-#endif // ISO14443A_ASK_ANALYZER_H
+#endif // ISO14443A_LOADMOD_ANALYZER_H

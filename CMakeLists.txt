@@ -25,3 +25,17 @@ src/ask_analyzer/Iso14443aAskSimulationDataGenerator.h
 )
 
 add_analyzer_plugin(${ASK_PROJECT_NAME} SOURCES ${ASK_SOURCES})
+
+set(LOADMOD_PROJECT_NAME Iso14443aLoadmodAnalyzer)
+set(LOADMOD_SOURCES
+src/loadmod_analyzer/Iso14443aLoadmodAnalyzer.cpp
+src/loadmod_analyzer/Iso14443aLoadmodAnalyzer.h
+src/loadmod_analyzer/Iso14443aLoadmodAnalyzerResults.cpp
+src/loadmod_analyzer/Iso14443aLoadmodAnalyzerResults.h
+src/loadmod_analyzer/Iso14443aLoadmodAnalyzerSettings.cpp
+src/loadmod_analyzer/Iso14443aLoadmodAnalyzerSettings.h
+src/loadmod_analyzer/Iso14443aLoadmodSimulationDataGenerator.cpp
+src/loadmod_analyzer/Iso14443aLoadmodSimulationDataGenerator.h
+)
+
+add_analyzer_plugin(${LOADMOD_PROJECT_NAME} SOURCES ${LOADMOD_SOURCES})

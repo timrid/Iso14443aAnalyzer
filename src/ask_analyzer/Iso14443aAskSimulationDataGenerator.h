@@ -1,5 +1,5 @@
-#ifndef ISO14443A_SIMULATION_DATA_GENERATOR
-#define ISO14443A_SIMULATION_DATA_GENERATOR
+#ifndef ISO14443A_ASK_SIMULATION_DATA_GENERATOR
+#define ISO14443A_ASK_SIMULATION_DATA_GENERATOR
 
 #include <SimulationChannelDescriptor.h>
 #include <string>
@@ -26,4 +26,4 @@ protected:
 	SimulationChannelDescriptor mSerialSimulationData;
 
 };
-#endif //ISO14443A_SIMULATION_DATA_GENERATOR
+#endif //ISO14443A_ASK_SIMULATION_DATA_GENERATOR
