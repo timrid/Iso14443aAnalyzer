@@ -8,7 +8,6 @@ enum AskOutputFormat
 {
     Sequences = 0,
     Bytes = 1,
-    Frames = 2,
 };
 
 class Iso14443aAnalyzerSettings : public AnalyzerSettings

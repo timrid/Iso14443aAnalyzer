@@ -32,8 +32,6 @@ class ANALYZER_EXPORT Iso14443aAnalyzer : public Analyzer2
     struct AskFrame
     {
         U64 frame_start_sample{ 0U }; // first sample of frame
-        // U64 data_start_sample{ 0U };  // fist sample of the data of the frame
-        // U64 data_end_sample{ 0U };    // last sample of the data of the frame
         U64 frame_end_sample{ 0U }; // last sample of frame
 
         U32 seq_num{ 0U }; // sequence count of complete frame

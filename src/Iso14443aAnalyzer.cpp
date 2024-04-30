@@ -25,7 +25,11 @@ void Iso14443aAnalyzer::SetupResults()
 {
     mResults.reset( new Iso14443aAnalyzerResults( this, mSettings.get() ) );
     SetAnalyzerResults( mResults.get() );
-    mResults->AddChannelBubblesWillAppearOn( mSettings->mAskInputChannel );
+
+    if( mSettings->mAskInputChannel != UNDEFINED_CHANNEL )
+        mResults->AddChannelBubblesWillAppearOn( mSettings->mAskInputChannel );
+    if( mSettings->mAskInputChannel != UNDEFINED_CHANNEL )
+        mResults->AddChannelBubblesWillAppearOn( mSettings->mAskInputChannel );
 }
 
 
@@ -74,7 +78,7 @@ std::tuple<U8, U64> Iso14443aAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
     if( mAskOutputFormat == AskOutputFormat::Sequences )
     {
         Frame frame;
-        frame.mType = FRAME_TYPE_SEQUENCES_SEQUENCE;
+        frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_SEQUENCES_SEQUENCE;
         frame.mData1 = seq;
         frame.mStartingSampleInclusive = seq_start_sample;
         frame.mEndingSampleInclusive = S64( seq_start_sample + mAskSamplesPerBit );
@@ -108,7 +112,7 @@ Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameStartOfC
     if( mAskOutputFormat == AskOutputFormat::Bytes )
     {
         Frame frame;
-        frame.mType = FRAME_TYPE_BYTES_SOC;
+        frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_BYTES_SOC;
         frame.mStartingSampleInclusive = ask_frame.frame_start_sample;
         frame.mEndingSampleInclusive = U64( ask_frame.frame_start_sample + mAskSamplesPerBit ) - 1;
         mResults->AddFrame( frame );
@@ -205,7 +209,7 @@ Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameData( As
                     Frame frame;
                     frame.mData1 = byte;
                     frame.mData2 = bits_in_byte;
-                    frame.mType = FRAME_TYPE_BYTES_BYTE;
+                    frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_BYTES_BYTE;
                     frame.mFlags = frame_flags;
                     frame.mStartingSampleInclusive = bit_starting_sample;
                     frame.mEndingSampleInclusive = bit_ending_sample;
@@ -225,7 +229,7 @@ Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameData( As
             if( mAskOutputFormat == AskOutputFormat::Bytes )
             {
                 Frame frame;
-                frame.mType = FRAME_TYPE_BYTES_EOC;
+                frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_BYTES_EOC;
                 frame.mStartingSampleInclusive = eoc_starting_sample;
                 frame.mEndingSampleInclusive = eoc_ending_sample;
                 mResults->AddFrame( frame );

@@ -42,7 +42,13 @@ void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& cha
     ClearResultStrings();
     Frame frame = GetFrame( frame_index );
 
-    if( frame.mType == FRAME_TYPE_BYTES_BYTE )
+    if( ( ( frame.mType & FRAME_TYPE_DIRCETION_MASK ) == FRAME_TYPE_DIRCETION_PCD_TO_PICC ) && ( channel != mSettings->mAskInputChannel ) )
+    {
+        // wrong channel
+        return;
+    }
+
+    if( ( frame.mType & FRAME_TYPE_VIEW_MASK ) == FRAME_TYPE_VIEW_BYTES_BYTE )
     {
         char number_str[ 128 ];
         AnalyzerHelpers::GetNumberString( frame.mData1, display_base, U32( frame.mData2 ), number_str, 128 );
@@ -60,15 +66,15 @@ void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& cha
         }
         AddResultString( number_str, hint_str.c_str(), error_str.c_str() );
     }
-    else if( frame.mType == FRAME_TYPE_BYTES_SOC )
+    else if( ( frame.mType & FRAME_TYPE_VIEW_MASK ) == FRAME_TYPE_VIEW_BYTES_SOC )
     {
         AddResultString( "SOC" );
     }
-    else if( frame.mType == FRAME_TYPE_BYTES_EOC )
+    else if( ( frame.mType & FRAME_TYPE_VIEW_MASK ) == FRAME_TYPE_VIEW_BYTES_EOC )
     {
         AddResultString( "EOC" );
     }
-    else if( frame.mType == FRAME_TYPE_SEQUENCES_SEQUENCE )
+    else if( ( frame.mType & FRAME_TYPE_VIEW_MASK ) == FRAME_TYPE_VIEW_SEQUENCES_SEQUENCE )
     {
         switch( frame.mData1 )
         {

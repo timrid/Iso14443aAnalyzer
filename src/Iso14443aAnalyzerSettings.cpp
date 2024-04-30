@@ -19,7 +19,6 @@ Iso14443aAnalyzerSettings::Iso14443aAnalyzerSettings()
     mAskOutputFormatInterface->SetTitleAndTooltip( "PCD->PICC (ASK) Output Format", "" );
     mAskOutputFormatInterface->AddNumber( AskOutputFormat::Sequences, "Sequences", "" );
     mAskOutputFormatInterface->AddNumber( AskOutputFormat::Bytes, "Bytes", "" );
-    mAskOutputFormatInterface->AddNumber( AskOutputFormat::Frames, "Frames", "" );
     mAskOutputFormatInterface->SetNumber( mAskOutputFormat );
 
     mLoadmodInputChannelInterface.reset( new AnalyzerSettingInterfaceChannel() );
