@@ -3,19 +3,19 @@
 
 #include <SimulationChannelDescriptor.h>
 #include <string>
-class Iso14443aAnalyzerSettings;
+class Iso14443aAskAnalyzerSettings;
 
-class Iso14443aSimulationDataGenerator
+class Iso14443aAskSimulationDataGenerator
 {
 public:
-	Iso14443aSimulationDataGenerator();
-	~Iso14443aSimulationDataGenerator();
+	Iso14443aAskSimulationDataGenerator();
+	~Iso14443aAskSimulationDataGenerator();
 
-	void Initialize( U32 simulation_sample_rate, Iso14443aAnalyzerSettings* settings );
+	void Initialize( U32 simulation_sample_rate, Iso14443aAskAnalyzerSettings* settings );
 	U32 GenerateSimulationData( U64 newest_sample_requested, U32 sample_rate, SimulationChannelDescriptor** simulation_channel );
 
 protected:
-	Iso14443aAnalyzerSettings* mSettings;
+	Iso14443aAskAnalyzerSettings* mSettings;
 	U32 mSimulationSampleRateHz;
 
 protected:

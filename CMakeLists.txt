@@ -12,15 +12,16 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(ExternalAnalyzerSDK)
 
-set(SOURCES 
-src/Iso14443aAnalyzer.cpp
-src/Iso14443aAnalyzer.h
-src/Iso14443aAnalyzerResults.cpp
-src/Iso14443aAnalyzerResults.h
-src/Iso14443aAnalyzerSettings.cpp
-src/Iso14443aAnalyzerSettings.h
-src/Iso14443aSimulationDataGenerator.cpp
-src/Iso14443aSimulationDataGenerator.h
+set(ASK_PROJECT_NAME Iso14443aAskAnalyzer)
+set(ASK_SOURCES
+src/ask_analyzer/Iso14443aAskAnalyzer.cpp
+src/ask_analyzer/Iso14443aAskAnalyzer.h
+src/ask_analyzer/Iso14443aAskAnalyzerResults.cpp
+src/ask_analyzer/Iso14443aAskAnalyzerResults.h
+src/ask_analyzer/Iso14443aAskAnalyzerSettings.cpp
+src/ask_analyzer/Iso14443aAskAnalyzerSettings.h
+src/ask_analyzer/Iso14443aAskSimulationDataGenerator.cpp
+src/ask_analyzer/Iso14443aAskSimulationDataGenerator.h
 )
 
-add_analyzer_plugin(${PROJECT_NAME} SOURCES ${SOURCES})
+add_analyzer_plugin(${ASK_PROJECT_NAME} SOURCES ${ASK_SOURCES})

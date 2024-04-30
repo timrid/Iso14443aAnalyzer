@@ -22,14 +22,14 @@ static const U8 ASK_SEQ_ERROR = 0b100;
 
 std::string format_string( char const* const format, ... );
 
-class Iso14443aAnalyzer;
-class Iso14443aAnalyzerSettings;
+class Iso14443aAskAnalyzer;
+class Iso14443aAskAnalyzerSettings;
 
-class Iso14443aAnalyzerResults : public AnalyzerResults
+class Iso14443aAskAnalyzerResults : public AnalyzerResults
 {
   public:
-    Iso14443aAnalyzerResults( Iso14443aAnalyzer* analyzer, Iso14443aAnalyzerSettings* settings );
-    virtual ~Iso14443aAnalyzerResults();
+    Iso14443aAskAnalyzerResults( Iso14443aAskAnalyzer* analyzer, Iso14443aAskAnalyzerSettings* settings );
+    virtual ~Iso14443aAskAnalyzerResults();
 
     virtual void GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base );
     virtual void GenerateExportFile( const char* file, DisplayBase display_base, U32 export_type_user_id );
@@ -40,8 +40,8 @@ class Iso14443aAnalyzerResults : public AnalyzerResults
 
   protected: // functions
   protected: // vars
-    Iso14443aAnalyzerSettings* mSettings;
-    Iso14443aAnalyzer* mAnalyzer;
+    Iso14443aAskAnalyzerSettings* mSettings;
+    Iso14443aAskAnalyzer* mAnalyzer;
 };
 
 #endif // ISO14443A_ANALYZER_RESULTS

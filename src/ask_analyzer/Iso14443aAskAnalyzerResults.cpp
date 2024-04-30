@@ -1,7 +1,7 @@
-#include "Iso14443aAnalyzerResults.h"
+#include "Iso14443aAskAnalyzerResults.h"
 #include <AnalyzerHelpers.h>
-#include "Iso14443aAnalyzer.h"
-#include "Iso14443aAnalyzerSettings.h"
+#include "Iso14443aAskAnalyzer.h"
+#include "Iso14443aAskAnalyzerSettings.h"
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -27,17 +27,17 @@ std::string format_string( char const* const format, ... )
     return std::string( &vec[ 0 ] );
 }
 
-Iso14443aAnalyzerResults::Iso14443aAnalyzerResults( Iso14443aAnalyzer* analyzer, Iso14443aAnalyzerSettings* settings )
+Iso14443aAskAnalyzerResults::Iso14443aAskAnalyzerResults( Iso14443aAskAnalyzer* analyzer, Iso14443aAskAnalyzerSettings* settings )
     : AnalyzerResults(), mSettings( settings ), mAnalyzer( analyzer )
 {
 }
 
-Iso14443aAnalyzerResults::~Iso14443aAnalyzerResults()
+Iso14443aAskAnalyzerResults::~Iso14443aAskAnalyzerResults()
 {
 }
 
 
-void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base )
+void Iso14443aAskAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& channel, DisplayBase display_base )
 {
     ClearResultStrings();
     Frame frame = GetFrame( frame_index );
@@ -94,7 +94,7 @@ void Iso14443aAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& cha
     }
 }
 
-void Iso14443aAnalyzerResults::GenerateExportFile( const char* file, DisplayBase display_base, U32 export_type_user_id )
+void Iso14443aAskAnalyzerResults::GenerateExportFile( const char* file, DisplayBase display_base, U32 export_type_user_id )
 {
     std::ofstream file_stream( file, std::ios::out );
 
@@ -126,7 +126,7 @@ void Iso14443aAnalyzerResults::GenerateExportFile( const char* file, DisplayBase
     file_stream.close();
 }
 
-void Iso14443aAnalyzerResults::GenerateFrameTabularText( U64 frame_index, DisplayBase display_base )
+void Iso14443aAskAnalyzerResults::GenerateFrameTabularText( U64 frame_index, DisplayBase display_base )
 {
 #ifdef SUPPORTS_PROTOCOL_SEARCH
     Frame frame = GetFrame( frame_index );
@@ -138,12 +138,12 @@ void Iso14443aAnalyzerResults::GenerateFrameTabularText( U64 frame_index, Displa
 #endif
 }
 
-void Iso14443aAnalyzerResults::GeneratePacketTabularText( U64 packet_id, DisplayBase display_base )
+void Iso14443aAskAnalyzerResults::GeneratePacketTabularText( U64 packet_id, DisplayBase display_base )
 {
     // not supported
 }
 
-void Iso14443aAnalyzerResults::GenerateTransactionTabularText( U64 transaction_id, DisplayBase display_base )
+void Iso14443aAskAnalyzerResults::GenerateTransactionTabularText( U64 transaction_id, DisplayBase display_base )
 {
     // not supported
 }

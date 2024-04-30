@@ -1,6 +1,6 @@
-#include "Iso14443aAnalyzer.h"
-#include "Iso14443aAnalyzerSettings.h"
-#include "Iso14443aAnalyzerResults.h"
+#include "Iso14443aAskAnalyzer.h"
+#include "Iso14443aAskAnalyzerSettings.h"
+#include "Iso14443aAskAnalyzerResults.h"
 #include "AnalyzerHelpers.h"
 #include <AnalyzerChannelData.h>
 #include <deque>
@@ -10,20 +10,20 @@
 U32 FREQ_CARRIER = 13560000;
 
 
-Iso14443aAnalyzer::Iso14443aAnalyzer() : Analyzer2(), mSettings( new Iso14443aAnalyzerSettings() ), mSimulationInitilized( false )
+Iso14443aAskAnalyzer::Iso14443aAskAnalyzer() : Analyzer2(), mSettings( new Iso14443aAskAnalyzerSettings() ), mSimulationInitilized( false )
 {
     SetAnalyzerSettings( mSettings.get() );
     UseFrameV2();
 }
 
-Iso14443aAnalyzer::~Iso14443aAnalyzer()
+Iso14443aAskAnalyzer::~Iso14443aAskAnalyzer()
 {
     KillThread();
 }
 
-void Iso14443aAnalyzer::SetupResults()
+void Iso14443aAskAnalyzer::SetupResults()
 {
-    mResults.reset( new Iso14443aAnalyzerResults( this, mSettings.get() ) );
+    mResults.reset( new Iso14443aAskAnalyzerResults( this, mSettings.get() ) );
     SetAnalyzerResults( mResults.get() );
 
     if( mSettings->mAskInputChannel != UNDEFINED_CHANNEL )
@@ -33,7 +33,7 @@ void Iso14443aAnalyzer::SetupResults()
 }
 
 
-std::tuple<U8, U64> Iso14443aAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
+std::tuple<U8, U64> Iso14443aAskAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
 {
     U32 bit_changes = 0;
     U8 seq = 0;
@@ -91,7 +91,7 @@ std::tuple<U8, U64> Iso14443aAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
 }
 
 
-Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame )
+Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame )
 {
     // wait for edge as start condition (eg. rising edge)
     mAskSerial->AdvanceToNextEdge();
@@ -124,7 +124,7 @@ Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameStartOfC
 }
 
 
-Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
+Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
 {
     bool end_of_communication = false;
 
@@ -248,7 +248,7 @@ Iso14443aAnalyzer::AskFrame::AskError Iso14443aAnalyzer::ReceiveAskFrameData( As
     }
 }
 
-void Iso14443aAnalyzer::ReportAskFrame( AskFrame& ask_frame )
+void Iso14443aAskAnalyzer::ReportAskFrame( AskFrame& ask_frame )
 {
     FrameV2 frameV2;
 
@@ -277,7 +277,7 @@ void Iso14443aAnalyzer::ReportAskFrame( AskFrame& ask_frame )
     ReportProgress( ask_frame.frame_end_sample );
 }
 
-void Iso14443aAnalyzer::ReceiveAskFrame()
+void Iso14443aAskAnalyzer::ReceiveAskFrame()
 {
     AskFrame ask_frame;
     AskFrame::AskError ask_error;
@@ -291,7 +291,7 @@ void Iso14443aAnalyzer::ReceiveAskFrame()
     ReportAskFrame( ask_frame );
 }
 
-void Iso14443aAnalyzer::WorkerThread()
+void Iso14443aAskAnalyzer::WorkerThread()
 {
     mSampleRateHz = GetSampleRate();
 
@@ -311,12 +311,12 @@ void Iso14443aAnalyzer::WorkerThread()
     }
 }
 
-bool Iso14443aAnalyzer::NeedsRerun()
+bool Iso14443aAskAnalyzer::NeedsRerun()
 {
     return false;
 }
 
-U32 Iso14443aAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate,
+U32 Iso14443aAskAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate,
                                                SimulationChannelDescriptor** simulation_channels )
 {
     if( mSimulationInitilized == false )
@@ -328,7 +328,7 @@ U32 Iso14443aAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 dev
     return mSimulationDataGenerator.GenerateSimulationData( minimum_sample_index, device_sample_rate, simulation_channels );
 }
 
-U32 Iso14443aAnalyzer::GetMinimumSampleRateHz()
+U32 Iso14443aAskAnalyzer::GetMinimumSampleRateHz()
 {
     // Subcarrier = (13,56 MHz / 16) = ca. 848kHz
     // Multiplikator = 4;
@@ -336,19 +336,19 @@ U32 Iso14443aAnalyzer::GetMinimumSampleRateHz()
     return ( FREQ_CARRIER * 4 ) / 16;
 }
 
-const char* Iso14443aAnalyzer::GetAnalyzerName() const
+const char* Iso14443aAskAnalyzer::GetAnalyzerName() const
 {
-    return "ISO 14443a RFID";
+    return "ISO14443A-ASK";
 }
 
 const char* GetAnalyzerName()
 {
-    return "ISO 14443a RFID";
+    return "ISO14443A-ASK";
 }
 
 Analyzer* CreateAnalyzer()
 {
-    return new Iso14443aAnalyzer();
+    return new Iso14443aAskAnalyzer();
 }
 
 void DestroyAnalyzer( Analyzer* analyzer )

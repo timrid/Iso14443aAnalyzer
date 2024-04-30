@@ -2,9 +2,9 @@
 #define ISO14443A_ANALYZER_H
 
 #include <Analyzer.h>
-#include "Iso14443aAnalyzerResults.h"
-#include "Iso14443aAnalyzerSettings.h"
-#include "Iso14443aSimulationDataGenerator.h"
+#include "Iso14443aAskAnalyzerResults.h"
+#include "Iso14443aAskAnalyzerSettings.h"
+#include "Iso14443aAskSimulationDataGenerator.h"
 
 
 class Iso14443aPcdFrame
@@ -12,12 +12,12 @@ class Iso14443aPcdFrame
 };
 
 
-class Iso14443aAnalyzerSettings;
-class ANALYZER_EXPORT Iso14443aAnalyzer : public Analyzer2
+class Iso14443aAskAnalyzerSettings;
+class ANALYZER_EXPORT Iso14443aAskAnalyzer : public Analyzer2
 {
   public:
-    Iso14443aAnalyzer();
-    virtual ~Iso14443aAnalyzer();
+    Iso14443aAskAnalyzer();
+    virtual ~Iso14443aAskAnalyzer();
 
     virtual void SetupResults();
     virtual void WorkerThread();
@@ -55,11 +55,11 @@ class ANALYZER_EXPORT Iso14443aAnalyzer : public Analyzer2
     void ReportAskFrame( AskFrame& ask_frame );
     void ReceiveAskFrame();
 
-    std::unique_ptr<Iso14443aAnalyzerSettings> mSettings;
-    std::unique_ptr<Iso14443aAnalyzerResults> mResults;
+    std::unique_ptr<Iso14443aAskAnalyzerSettings> mSettings;
+    std::unique_ptr<Iso14443aAskAnalyzerResults> mResults;
     AnalyzerChannelData* mAskSerial;
 
-    Iso14443aSimulationDataGenerator mSimulationDataGenerator;
+    Iso14443aAskSimulationDataGenerator mSimulationDataGenerator;
     bool mSimulationInitilized;
 
     // Serial analysis vars:

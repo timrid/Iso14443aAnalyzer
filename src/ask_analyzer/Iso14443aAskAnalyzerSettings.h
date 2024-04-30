@@ -10,11 +10,11 @@ enum AskOutputFormat
     Bytes = 1,
 };
 
-class Iso14443aAnalyzerSettings : public AnalyzerSettings
+class Iso14443aAskAnalyzerSettings : public AnalyzerSettings
 {
   public:
-    Iso14443aAnalyzerSettings();
-    virtual ~Iso14443aAnalyzerSettings();
+    Iso14443aAskAnalyzerSettings();
+    virtual ~Iso14443aAskAnalyzerSettings();
 
     virtual bool SetSettingsFromInterfaces();
     void UpdateInterfacesFromSettings();
@@ -25,13 +25,11 @@ class Iso14443aAnalyzerSettings : public AnalyzerSettings
     Channel mAskInputChannel;
     BitState mAskIdleState;
     AskOutputFormat mAskOutputFormat;
-    Channel mLoadmodInputChannel;
 
   protected:
     std::unique_ptr<AnalyzerSettingInterfaceChannel> mAskInputChannelInterface;
     std::unique_ptr<AnalyzerSettingInterfaceNumberList> mAskIdleStateInterface;
     std::unique_ptr<AnalyzerSettingInterfaceNumberList> mAskOutputFormatInterface;
-    std::unique_ptr<AnalyzerSettingInterfaceChannel> mLoadmodInputChannelInterface;
 };
 
 #endif // ISO14443A_ANALYZER_SETTINGS
