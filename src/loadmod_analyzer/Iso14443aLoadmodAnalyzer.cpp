@@ -10,7 +10,8 @@
 U32 FREQ_CARRIER = 13560000;
 
 
-Iso14443aLoadmodAnalyzer::Iso14443aLoadmodAnalyzer() : Analyzer2(), mSettings( new Iso14443aLoadmodAnalyzerSettings() ), mSimulationInitilized( false )
+Iso14443aLoadmodAnalyzer::Iso14443aLoadmodAnalyzer()
+    : Analyzer2(), mSettings( new Iso14443aLoadmodAnalyzerSettings() ), mSimulationInitilized( false )
 {
     SetAnalyzerSettings( mSettings.get() );
     UseFrameV2();
@@ -26,62 +27,87 @@ void Iso14443aLoadmodAnalyzer::SetupResults()
     mResults.reset( new Iso14443aLoadmodAnalyzerResults( this, mSettings.get() ) );
     SetAnalyzerResults( mResults.get() );
 
-    if( mSettings->mAskInputChannel != UNDEFINED_CHANNEL )
-        mResults->AddChannelBubblesWillAppearOn( mSettings->mAskInputChannel );
-    if( mSettings->mAskInputChannel != UNDEFINED_CHANNEL )
-        mResults->AddChannelBubblesWillAppearOn( mSettings->mAskInputChannel );
+    if( mSettings->mLoadmodInputChannel != UNDEFINED_CHANNEL )
+        mResults->AddChannelBubblesWillAppearOn( mSettings->mLoadmodInputChannel );
 }
 
 
-std::tuple<U8, U64> Iso14443aLoadmodAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
+std::tuple<U8, U64> Iso14443aLoadmodAnalyzer::ReceiveLoadmodSeq( LoadmodFrame& loadmod_frame )
 {
     U32 bit_changes = 0;
     U8 seq = 0;
+    BitState bit_state = BIT_LOW;
 
-    U64 seq_start_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
-    ask_frame.seq_num++;
+    U64 seq_start_sample = loadmod_frame.frame_start_sample + U64( loadmod_frame.seq_num * mLoadmodSamplesPerBit );
+    loadmod_frame.seq_num++;
 
     // save last received sample
-    ask_frame.frame_end_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
+    loadmod_frame.frame_end_sample = loadmod_frame.frame_start_sample + U64( loadmod_frame.seq_num * mLoadmodSamplesPerBit );
 
     // mark start of sequence
-    mResults->AddMarker( U64( seq_start_sample ), AnalyzerResults::Start, mSettings->mAskInputChannel );
+    mResults->AddMarker( U64( seq_start_sample ), AnalyzerResults::Start, mSettings->mLoadmodInputChannel );
 
-    // wait for first bit half
-    bit_changes = mAskSerial->AdvanceToAbsPosition( U64( seq_start_sample + mAskOffsetToFrameStart ) );
-    if( bit_changes > 1 )
-    {
-        return { ASK_SEQ_ERROR, seq_start_sample };
-    }
+    // wait for first bit quarter
+    bit_changes = mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + ( mLoadmodSamplesPerBit * ( 1.0 / 4.0 ) ) ) );
+
+    // save bit state in the middel of the bit half to check the state
+    bit_state = mLoadmodSerial->GetBitState();
 
     // mark sampling point
-    mResults->AddMarker( mAskSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mAskInputChannel );
-    if( mAskSerial->GetBitState() != mAskIdleState )
+    mResults->AddMarker( mLoadmodSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mLoadmodInputChannel );
+
+    // wait for second bit quarter
+    bit_changes += mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + ( mLoadmodSamplesPerBit * ( 2.0 / 4.0 ) ) ) );
+    if( ( bit_changes >= 6 ) && ( bit_changes <= 9 ) )
     {
+        // modulation available
         seq |= 0b10;
     }
-
-    // wait for second bit half
-    bit_changes = mAskSerial->AdvanceToAbsPosition( U64( seq_start_sample + mAskOffsetToFrameStart + ( mAskSamplesPerBit / 2 ) ) );
-    if( bit_changes > 1 )
+    else if( ( bit_state == mLoadmodIdleState ) && ( bit_changes <= 2 ) )
     {
-        return { ASK_SEQ_ERROR, seq_start_sample };
+        // no modulation available
+    }
+    else
+    {
+        return { LOADMOD_SEQ_ERROR, seq_start_sample };
     }
 
     // mark sampling point
-    mResults->AddMarker( mAskSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mAskInputChannel );
-    if( mAskSerial->GetBitState() != mAskIdleState )
+    mResults->AddMarker( mLoadmodSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mLoadmodInputChannel );
+
+    // wait for third bit quarter
+    bit_changes = mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + ( mLoadmodSamplesPerBit * ( 3.0 / 4.0 ) ) ) );
+
+    // save bit state in the middel of the bit half to check the state
+    bit_state = mLoadmodSerial->GetBitState();
+
+    // mark sampling point
+    mResults->AddMarker( mLoadmodSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mLoadmodInputChannel );
+
+    // wait for fourth bit quarter
+    bit_changes += mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + mLoadmodSamplesPerBit ) );
+
+    if( ( bit_changes >= 6 ) && ( bit_changes <= 9 ) )
     {
+        // modulation available
         seq |= 0b01;
     }
+    else if( ( bit_state == mLoadmodIdleState ) && ( bit_changes <= 2 ) )
+    {
+        // no modulation available
+    }
+    else
+    {
+        return { LOADMOD_SEQ_ERROR, seq_start_sample };
+    }
 
-    if( mAskOutputFormat == AskOutputFormat::Sequences )
+    if( mLoadmodOutputFormat == LoadmodOutputFormat::Sequences )
     {
         Frame frame;
-        frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_SEQUENCES_SEQUENCE;
+        frame.mType = FRAME_TYPE_VIEW_SEQUENCES_SEQUENCE;
         frame.mData1 = seq;
         frame.mStartingSampleInclusive = seq_start_sample;
-        frame.mEndingSampleInclusive = S64( seq_start_sample + mAskSamplesPerBit );
+        frame.mEndingSampleInclusive = S64( seq_start_sample + mLoadmodSamplesPerBit );
         mResults->AddFrame( frame );
         mResults->CommitResults();
         ReportProgress( frame.mEndingSampleInclusive );
@@ -91,73 +117,69 @@ std::tuple<U8, U64> Iso14443aLoadmodAnalyzer::ReceiveAskSeq( AskFrame& ask_frame
 }
 
 
-Iso14443aLoadmodAnalyzer::AskFrame::AskError Iso14443aLoadmodAnalyzer::ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame )
+Iso14443aLoadmodAnalyzer::LoadmodFrame::LoadmodError
+Iso14443aLoadmodAnalyzer::ReceiveLoadmodFrameStartOfCommunication( LoadmodFrame& loadmod_frame )
 {
     // wait for edge as start condition (eg. rising edge)
-    mAskSerial->AdvanceToNextEdge();
-    ask_frame.frame_start_sample = mAskSerial->GetSampleNumber();
-    ask_frame.seq_num = 0;
+    mLoadmodSerial->AdvanceToNextEdge();
+    loadmod_frame.frame_start_sample = mLoadmodSerial->GetSampleNumber();
+    loadmod_frame.seq_num = 0;
 
     // detect start of communication
-    auto seq = ReceiveAskSeq( ask_frame );
+    auto seq = ReceiveLoadmodSeq( loadmod_frame );
 
-    if( std::get<0>( seq ) != ASK_SEQ_Z )
+    if( std::get<0>( seq ) != LOADMOD_SEQ_D )
     {
         // ERROR
-        ask_frame.error = AskFrame::AskError::ErrorWrongSoc;
-        return ask_frame.error;
+        loadmod_frame.error = LoadmodFrame::LoadmodError::ErrorWrongSoc;
+        return loadmod_frame.error;
     }
 
     // Save SOC
-    if( mAskOutputFormat == AskOutputFormat::Bytes )
+    if( mLoadmodOutputFormat == LoadmodOutputFormat::Bytes )
     {
         Frame frame;
-        frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_BYTES_SOC;
-        frame.mStartingSampleInclusive = ask_frame.frame_start_sample;
-        frame.mEndingSampleInclusive = U64( ask_frame.frame_start_sample + mAskSamplesPerBit ) - 1;
+        frame.mType = FRAME_TYPE_VIEW_BYTES_SOC;
+        frame.mStartingSampleInclusive = loadmod_frame.frame_start_sample;
+        frame.mEndingSampleInclusive = U64( loadmod_frame.frame_start_sample + mLoadmodSamplesPerBit ) - 1;
         mResults->AddFrame( frame );
         mResults->CommitResults();
         ReportProgress( frame.mEndingSampleInclusive );
     }
 
-    return AskFrame::AskError::Ok;
+    return LoadmodFrame::LoadmodError::Ok;
 }
 
 
-Iso14443aLoadmodAnalyzer::AskFrame::AskError Iso14443aLoadmodAnalyzer::ReceiveAskFrameData( AskFrame& ask_frame )
+Iso14443aLoadmodAnalyzer::LoadmodFrame::LoadmodError Iso14443aLoadmodAnalyzer::ReceiveLoadmodFrameData( LoadmodFrame& loadmod_frame )
 {
     bool end_of_communication = false;
 
     std::deque<std::tuple<U8, U64>> bit_buffer;
 
-
-    // last_bit must be 0, because a logic "0" followed by the start of communication must begin with SeqZ instead of SeqY
-    std::tuple<U8, U64> last_bit = { 0, ask_frame.frame_end_sample };
-
     while( true )
     {
-        auto seq = ReceiveAskSeq( ask_frame );
+        auto seq = ReceiveLoadmodSeq( loadmod_frame );
 
-        if( std::get<0>( seq ) == ASK_SEQ_X )
+        if( std::get<0>( seq ) == LOADMOD_SEQ_D )
         {
             // logic "1"
-            last_bit = { 1, std::get<1>( seq ) };
+            bit_buffer.push_back( { 1, std::get<1>( seq ) } );
         }
-        else if( ( ( std::get<0>( last_bit ) == 0 ) && ( std::get<0>( seq ) == ASK_SEQ_Z ) ) ||
-                 ( ( std::get<0>( last_bit ) == 1 ) && ( std::get<0>( seq ) == ASK_SEQ_Y ) ) )
+        else if( std::get<0>( seq ) == LOADMOD_SEQ_E )
         {
             // logic "0"
-            last_bit = { 0, std::get<1>( seq ) };
+            bit_buffer.push_back( { 0, std::get<1>( seq ) } );
         }
-        else if( ( std::get<0>( last_bit ) == 0 ) && ( std::get<0>( seq ) == ASK_SEQ_Y ) )
+        else if( std::get<0>( seq ) == LOADMOD_SEQ_F )
         {
             end_of_communication = true;
         }
         else
         {
             // ERROR
-            ask_frame.error = AskFrame::AskError::ErrorWrongSequence;
-            return ask_frame.error;
+            loadmod_frame.error = LoadmodFrame::LoadmodError::ErrorWrongSequence;
+            return loadmod_frame.error;
         }
 
         bool byte_complete = bit_buffer.size() == 9; // 8 data bits + 1 parity bit
@@ -195,21 +217,21 @@ Iso14443aLoadmodAnalyzer::AskFrame::AskError Iso14443aLoadmodAnalyzer::ReceiveAs
                     if( AnalyzerHelpers::IsOdd( AnalyzerHelpers::GetOnesCount( byte ) ) == bool( parity_bit ) )
                     {
                         frame_flags = FRAME_FLAG_PARITY_ERROR;
-                        ask_frame.error = AskFrame::AskError::ErrorParity;
+                        loadmod_frame.error = LoadmodFrame::LoadmodError::ErrorParity;
                     }
                 }
 
-                bit_ending_sample += U64( mAskSamplesPerBit );
+                bit_ending_sample += U64( mLoadmodSamplesPerBit );
 
-                ask_frame.data.push_back( byte );
-                ask_frame.data_valid_bits_in_last_byte = bits_in_byte;
+                loadmod_frame.data.push_back( byte );
+                loadmod_frame.data_valid_bits_in_last_byte = bits_in_byte;
 
-                if( mAskOutputFormat == AskOutputFormat::Bytes )
+                if( mLoadmodOutputFormat == LoadmodOutputFormat::Bytes )
                 {
                     Frame frame;
                     frame.mData1 = byte;
                     frame.mData2 = bits_in_byte;
-                    frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_BYTES_BYTE;
+                    frame.mType = FRAME_TYPE_VIEW_BYTES_BYTE;
                     frame.mFlags = frame_flags;
                     frame.mStartingSampleInclusive = bit_starting_sample;
                     frame.mEndingSampleInclusive = bit_ending_sample;
@@ -222,14 +244,14 @@ Iso14443aLoadmodAnalyzer::AskFrame::AskError Iso14443aLoadmodAnalyzer::ReceiveAs
 
         if( end_of_communication == true )
         {
-            U64 eoc_starting_sample = std::get<1>( last_bit );
-            U64 eoc_ending_sample = U64( eoc_starting_sample + ( 2 * mAskSamplesPerBit ) ) - 1;
-            ask_frame.frame_end_sample = eoc_ending_sample;
+            U64 eoc_starting_sample = std::get<1>( seq );
+            U64 eoc_ending_sample = U64( eoc_starting_sample + ( 2 * mLoadmodSamplesPerBit ) ) - 1;
+            loadmod_frame.frame_end_sample = eoc_ending_sample;
 
-            if( mAskOutputFormat == AskOutputFormat::Bytes )
+            if( mLoadmodOutputFormat == LoadmodOutputFormat::Bytes )
             {
                 Frame frame;
-                frame.mType = FRAME_TYPE_DIRCETION_PCD_TO_PICC | FRAME_TYPE_VIEW_BYTES_EOC;
+                frame.mType = FRAME_TYPE_VIEW_BYTES_EOC;
                 frame.mStartingSampleInclusive = eoc_starting_sample;
                 frame.mEndingSampleInclusive = eoc_ending_sample;
                 mResults->AddFrame( frame );
@@ -240,74 +262,68 @@ Iso14443aLoadmodAnalyzer::AskFrame::AskError Iso14443aLoadmodAnalyzer::ReceiveAs
             // End of communication
             break;
         }
-        else
-        {
-            // If no eoc is detected, the last bit is valid.
-            bit_buffer.push_back( last_bit );
-        }
     }
 }
 
-void Iso14443aLoadmodAnalyzer::ReportAskFrame( AskFrame& ask_frame )
+void Iso14443aLoadmodAnalyzer::ReportLoadmodFrame( LoadmodFrame& loadmod_frame )
 {
     FrameV2 frameV2;
 
-    frameV2.AddByteArray( "value", ask_frame.data.data(), ask_frame.data.size() );
+    frameV2.AddByteArray( "value", loadmod_frame.data.data(), loadmod_frame.data.size() );
     const char* status = "";
-    switch( ask_frame.error )
+    switch( loadmod_frame.error )
     {
-    case AskFrame::AskError::Ok:
+    case LoadmodFrame::LoadmodError::Ok:
         status = "OK";
         break;
-    case AskFrame::AskError::ErrorWrongSoc:
+    case LoadmodFrame::LoadmodError::ErrorWrongSoc:
         status = "SOC_ERROR";
         break;
-    case AskFrame::AskError::ErrorWrongSequence:
+    case LoadmodFrame::LoadmodError::ErrorWrongSequence:
         status = "SEQUENCE_ERROR";
         break;
-    case AskFrame::AskError::ErrorParity:
+    case LoadmodFrame::LoadmodError::ErrorParity:
         status = "PARITY_ERROR";
         break;
     };
     frameV2.AddString( "status", status );
-    frameV2.AddInteger( "valid_bits_of_last_byte", ask_frame.data_valid_bits_in_last_byte );
-    mResults->AddFrameV2( frameV2, "pcd_to_picc_raw", ask_frame.frame_start_sample, ask_frame.frame_end_sample );
+    frameV2.AddInteger( "valid_bits_of_last_byte", loadmod_frame.data_valid_bits_in_last_byte );
+    mResults->AddFrameV2( frameV2, "loadmod_frame", loadmod_frame.frame_start_sample, loadmod_frame.frame_end_sample );
 
     mResults->CommitResults();
-    ReportProgress( ask_frame.frame_end_sample );
+    ReportProgress( loadmod_frame.frame_end_sample );
 }
 
-void Iso14443aLoadmodAnalyzer::ReceiveAskFrame()
+void Iso14443aLoadmodAnalyzer::ReceiveLoadmodFrame()
 {
-    AskFrame ask_frame;
-    AskFrame::AskError ask_error;
+    LoadmodFrame loadmod_frame;
+    LoadmodFrame::LoadmodError loadmod_error;
 
-    ask_error = ReceiveAskFrameStartOfCommunication( ask_frame );
-    if( ask_error == AskFrame::AskError::Ok )
+    loadmod_error = ReceiveLoadmodFrameStartOfCommunication( loadmod_frame );
+    if( loadmod_error == LoadmodFrame::LoadmodError::Ok )
     {
-        ask_error = ReceiveAskFrameData( ask_frame );
+        loadmod_error = ReceiveLoadmodFrameData( loadmod_frame );
     }
 
-    ReportAskFrame( ask_frame );
+    ReportLoadmodFrame( loadmod_frame );
 }
 
 void Iso14443aLoadmodAnalyzer::WorkerThread()
 {
     mSampleRateHz = GetSampleRate();
 
-    mAskSerial = GetAnalyzerChannelData( mSettings->mAskInputChannel );
-    mAskSamplesPerBit = double( mSampleRateHz ) * ( double( 128 ) / double( FREQ_CARRIER ) );
-    mAskOffsetToFrameStart = mAskSamplesPerBit / 6;
-    mAskIdleState = mSettings->mAskIdleState;
-    mAskOutputFormat = mSettings->mAskOutputFormat;
+    mLoadmodSerial = GetAnalyzerChannelData( mSettings->mLoadmodInputChannel );
+    mLoadmodSamplesPerBit = double( mSampleRateHz ) * ( double( 128 ) / double( FREQ_CARRIER ) );
+    mLoadmodIdleState = mSettings->mLoadmodIdleState;
+    mLoadmodOutputFormat = mSettings->mLoadmodOutputFormat;
 
     // Wait for idle state (eg. low)
-    if( mAskSerial->GetBitState() != mAskIdleState )
-        mAskSerial->AdvanceToNextEdge();
+    if( mLoadmodSerial->GetBitState() != mLoadmodIdleState )
+        mLoadmodSerial->AdvanceToNextEdge();
 
     for( ;; )
     {
-        ReceiveAskFrame();
+        ReceiveLoadmodFrame();
     }
 }
 
@@ -317,7 +333,7 @@ bool Iso14443aLoadmodAnalyzer::NeedsRerun()
 }
 
 U32 Iso14443aLoadmodAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate,
-                                               SimulationChannelDescriptor** simulation_channels )
+                                                      SimulationChannelDescriptor** simulation_channels )
 {
     if( mSimulationInitilized == false )
     {

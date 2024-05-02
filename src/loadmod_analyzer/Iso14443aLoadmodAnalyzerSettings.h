@@ -4,7 +4,7 @@
 #include <AnalyzerSettings.h>
 #include <AnalyzerTypes.h>
 
-enum AskOutputFormat
+enum LoadmodOutputFormat
 {
     Sequences = 0,
     Bytes = 1,
@@ -22,14 +22,14 @@ class Iso14443aLoadmodAnalyzerSettings : public AnalyzerSettings
     virtual const char* SaveSettings();
 
 
-    Channel mAskInputChannel;
-    BitState mAskIdleState;
-    AskOutputFormat mAskOutputFormat;
+    Channel mLoadmodInputChannel;
+    BitState mLoadmodIdleState;
+    LoadmodOutputFormat mLoadmodOutputFormat;
 
   protected:
-    std::unique_ptr<AnalyzerSettingInterfaceChannel> mAskInputChannelInterface;
-    std::unique_ptr<AnalyzerSettingInterfaceNumberList> mAskIdleStateInterface;
-    std::unique_ptr<AnalyzerSettingInterfaceNumberList> mAskOutputFormatInterface;
+    std::unique_ptr<AnalyzerSettingInterfaceChannel> mLoadmodInputChannelInterface;
+    std::unique_ptr<AnalyzerSettingInterfaceNumberList> mLoadmodIdleStateInterface;
+    std::unique_ptr<AnalyzerSettingInterfaceNumberList> mLoadmodOutputFormatInterface;
 };
 
 #endif // ISO14443A_LOADMOD_ANALYZER_SETTINGS

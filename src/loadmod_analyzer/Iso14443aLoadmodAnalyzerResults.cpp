@@ -27,7 +27,8 @@ std::string format_string( char const* const format, ... )
     return std::string( &vec[ 0 ] );
 }
 
-Iso14443aLoadmodAnalyzerResults::Iso14443aLoadmodAnalyzerResults( Iso14443aLoadmodAnalyzer* analyzer, Iso14443aLoadmodAnalyzerSettings* settings )
+Iso14443aLoadmodAnalyzerResults::Iso14443aLoadmodAnalyzerResults( Iso14443aLoadmodAnalyzer* analyzer,
+                                                                  Iso14443aLoadmodAnalyzerSettings* settings )
     : AnalyzerResults(), mSettings( settings ), mAnalyzer( analyzer )
 {
 }
@@ -41,12 +42,6 @@ void Iso14443aLoadmodAnalyzerResults::GenerateBubbleText( U64 frame_index, Chann
 {
     ClearResultStrings();
     Frame frame = GetFrame( frame_index );
-
-    if( ( ( frame.mType & FRAME_TYPE_DIRCETION_MASK ) == FRAME_TYPE_DIRCETION_PCD_TO_PICC ) && ( channel != mSettings->mAskInputChannel ) )
-    {
-        // wrong channel
-        return;
-    }
 
     if( ( frame.mType & FRAME_TYPE_VIEW_MASK ) == FRAME_TYPE_VIEW_BYTES_BYTE )
     {
@@ -78,14 +73,14 @@ void Iso14443aLoadmodAnalyzerResults::GenerateBubbleText( U64 frame_index, Chann
     {
         switch( frame.mData1 )
         {
-        case ASK_SEQ_X:
-            AddResultString( "X" );
+        case LOADMOD_SEQ_D:
+            AddResultString( "D" );
             break;
-        case ASK_SEQ_Y:
-            AddResultString( "Y" );
+        case LOADMOD_SEQ_E:
+            AddResultString( "E" );
             break;
-        case ASK_SEQ_Z:
-            AddResultString( "Z" );
+        case LOADMOD_SEQ_F:
+            AddResultString( "F" );
             break;
         default:
             AddResultString( "ERROR" );

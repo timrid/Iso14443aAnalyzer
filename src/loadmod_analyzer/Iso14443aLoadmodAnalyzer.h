@@ -7,11 +7,6 @@
 #include "Iso14443aLoadmodSimulationDataGenerator.h"
 
 
-class Iso14443aPcdFrame
-{
-};
-
-
 class Iso14443aLoadmodAnalyzerSettings;
 class ANALYZER_EXPORT Iso14443aLoadmodAnalyzer : public Analyzer2
 {
@@ -29,7 +24,7 @@ class ANALYZER_EXPORT Iso14443aLoadmodAnalyzer : public Analyzer2
     virtual bool NeedsRerun();
 
   protected: // vars
-    struct AskFrame
+    struct LoadmodFrame
     {
         U64 frame_start_sample{ 0U }; // first sample of frame
         U64 frame_end_sample{ 0U }; // last sample of frame
@@ -39,25 +34,25 @@ class ANALYZER_EXPORT Iso14443aLoadmodAnalyzer : public Analyzer2
         std::vector<U8> data;                  // data of the frame
         U8 data_valid_bits_in_last_byte{ 0U }; // the last data byte can be incomplete, so here are the valid bit count saved
 
-        enum class AskError
+        enum class LoadmodError
         {
             Ok = 0,
             ErrorWrongSoc = 1,
             ErrorWrongSequence = 2,
             ErrorParity = 3,
         };
-        AskError error{ AskError::Ok };
+        LoadmodError error{ LoadmodError::Ok };
     };
 
-    std::tuple<U8, U64> ReceiveAskSeq( AskFrame& ask_fram );
-    AskFrame::AskError ReceiveAskFrameStartOfCommunication( AskFrame& ask_frame );
-    AskFrame::AskError ReceiveAskFrameData( AskFrame& ask_frame );
-    void ReportAskFrame( AskFrame& ask_frame );
-    void ReceiveAskFrame();
+    std::tuple<U8, U64> ReceiveLoadmodSeq( LoadmodFrame& loadmod_fram );
+    LoadmodFrame::LoadmodError ReceiveLoadmodFrameStartOfCommunication( LoadmodFrame& loadmod_frame );
+    LoadmodFrame::LoadmodError ReceiveLoadmodFrameData( LoadmodFrame& loadmod_frame );
+    void ReportLoadmodFrame( LoadmodFrame& loadmod_frame );
+    void ReceiveLoadmodFrame();
 
     std::unique_ptr<Iso14443aLoadmodAnalyzerSettings> mSettings;
     std::unique_ptr<Iso14443aLoadmodAnalyzerResults> mResults;
-    AnalyzerChannelData* mAskSerial;
+    AnalyzerChannelData* mLoadmodSerial;
 
     Iso14443aLoadmodSimulationDataGenerator mSimulationDataGenerator;
     bool mSimulationInitilized;
@@ -65,10 +60,9 @@ class ANALYZER_EXPORT Iso14443aLoadmodAnalyzer : public Analyzer2
     // Serial analysis vars:
     U32 mSampleRateHz;
 
-    double mAskSamplesPerBit;
-    double mAskOffsetToFrameStart;
-    BitState mAskIdleState;
-    AskOutputFormat mAskOutputFormat;
+    double mLoadmodSamplesPerBit;
+    BitState mLoadmodIdleState;
+    LoadmodOutputFormat mLoadmodOutputFormat;
 
     U32 mStartOfStopBitOffset;
     U32 mEndOfStopBitOffset;

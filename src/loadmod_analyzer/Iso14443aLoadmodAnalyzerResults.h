@@ -9,16 +9,12 @@ static const U8 FRAME_TYPE_VIEW_BYTES_BYTE = 0b00000001;
 static const U8 FRAME_TYPE_VIEW_BYTES_SOC = 0b00000010;
 static const U8 FRAME_TYPE_VIEW_BYTES_EOC = 0b00000011;
 
-static const U8 FRAME_TYPE_DIRCETION_MASK = 0b00000100;
-static const U8 FRAME_TYPE_DIRCETION_PCD_TO_PICC = 0b00000000;
-static const U8 FRAME_TYPE_DIRECTION_PICC_TO_PCD = 0b00000100;
-
 static const U8 FRAME_FLAG_PARITY_ERROR = 1;
 
-static const U8 ASK_SEQ_X = 0b01;
-static const U8 ASK_SEQ_Y = 0b00;
-static const U8 ASK_SEQ_Z = 0b10;
-static const U8 ASK_SEQ_ERROR = 0b100;
+static const U8 LOADMOD_SEQ_D = 0b10;
+static const U8 LOADMOD_SEQ_E = 0b01;
+static const U8 LOADMOD_SEQ_F = 0b00;
+static const U8 LOADMOD_SEQ_ERROR = 0b100;
 
 std::string format_string( char const* const format, ... );
 

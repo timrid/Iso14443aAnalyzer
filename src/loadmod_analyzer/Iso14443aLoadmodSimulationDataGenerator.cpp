@@ -18,7 +18,7 @@ void Iso14443aLoadmodSimulationDataGenerator::Initialize( U32 simulation_sample_
 	mSimulationSampleRateHz = simulation_sample_rate;
 	mSettings = settings;
 
-	mSerialSimulationData.SetChannel( mSettings->mAskInputChannel );
+	mSerialSimulationData.SetChannel( mSettings->mLoadmodInputChannel );
 	mSerialSimulationData.SetSampleRate( simulation_sample_rate );
 	mSerialSimulationData.SetInitialBitState( BIT_HIGH );
 }
