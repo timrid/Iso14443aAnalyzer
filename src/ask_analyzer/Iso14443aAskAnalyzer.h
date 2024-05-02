@@ -7,11 +7,6 @@
 #include "Iso14443aAskSimulationDataGenerator.h"
 
 
-class Iso14443aPcdFrame
-{
-};
-
-
 class Iso14443aAskAnalyzerSettings;
 class ANALYZER_EXPORT Iso14443aAskAnalyzer : public Analyzer2
 {

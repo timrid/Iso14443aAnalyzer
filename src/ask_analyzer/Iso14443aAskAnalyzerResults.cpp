@@ -42,12 +42,6 @@ void Iso14443aAskAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& 
     ClearResultStrings();
     Frame frame = GetFrame( frame_index );
 
-    if( ( ( frame.mType & FRAME_TYPE_DIRCETION_MASK ) == FRAME_TYPE_DIRCETION_PCD_TO_PICC ) && ( channel != mSettings->mAskInputChannel ) )
-    {
-        // wrong channel
-        return;
-    }
-
     if( ( frame.mType & FRAME_TYPE_VIEW_MASK ) == FRAME_TYPE_VIEW_BYTES_BYTE )
     {
         char number_str[ 128 ];
