@@ -39,14 +39,12 @@ std::tuple<U8, U64> Iso14443aAskAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
     U64 seq_start_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
     ask_frame.seq_num++;
 
-    // save last received sample
-    ask_frame.frame_end_sample = ask_frame.frame_start_sample + U64( ask_frame.seq_num * mAskSamplesPerBit );
-
     // mark start of sequence
     mResults->AddMarker( U64( seq_start_sample ), AnalyzerResults::Start, mSettings->mAskInputChannel );
 
     // wait for first bit half
-    bit_changes = mAskSerial->AdvanceToAbsPosition( U64( seq_start_sample + mAskOffsetToFrameStart ) );
+    ask_frame.frame_end_sample = seq_start_sample + U64( mAskOffsetToFrameStart );
+    bit_changes = mAskSerial->AdvanceToAbsPosition( ask_frame.frame_end_sample );
     if( bit_changes > 1 )
     {
         return { ASK_SEQ_ERROR, seq_start_sample };
@@ -60,7 +58,8 @@ std::tuple<U8, U64> Iso14443aAskAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
     }
 
     // wait for second bit half
-    bit_changes = mAskSerial->AdvanceToAbsPosition( U64( seq_start_sample + mAskOffsetToFrameStart + ( mAskSamplesPerBit / 2 ) ) );
+    ask_frame.frame_end_sample = seq_start_sample + U64( mAskOffsetToFrameStart + ( mAskSamplesPerBit / 2 ) );
+    bit_changes = mAskSerial->AdvanceToAbsPosition( ask_frame.frame_end_sample );
     if( bit_changes > 1 )
     {
         return { ASK_SEQ_ERROR, seq_start_sample };

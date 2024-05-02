@@ -41,14 +41,12 @@ std::tuple<U8, U64> Iso14443aLoadmodAnalyzer::ReceiveLoadmodSeq( LoadmodFrame& l
     U64 seq_start_sample = loadmod_frame.frame_start_sample + U64( loadmod_frame.seq_num * mLoadmodSamplesPerBit );
     loadmod_frame.seq_num++;
 
-    // save last received sample
-    loadmod_frame.frame_end_sample = loadmod_frame.frame_start_sample + U64( loadmod_frame.seq_num * mLoadmodSamplesPerBit );
-
     // mark start of sequence
     mResults->AddMarker( U64( seq_start_sample ), AnalyzerResults::Start, mSettings->mLoadmodInputChannel );
 
     // wait for first bit quarter
-    bit_changes = mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + ( mLoadmodSamplesPerBit * ( 1.0 / 4.0 ) ) ) );
+    loadmod_frame.frame_end_sample = seq_start_sample + U64( mLoadmodSamplesPerBit * ( 1.0 / 4.0 ) );
+    bit_changes = mLoadmodSerial->AdvanceToAbsPosition( loadmod_frame.frame_end_sample );
 
     // save bit state in the middel of the bit half to check the state
     bit_state = mLoadmodSerial->GetBitState();
@@ -57,7 +55,8 @@ std::tuple<U8, U64> Iso14443aLoadmodAnalyzer::ReceiveLoadmodSeq( LoadmodFrame& l
     mResults->AddMarker( mLoadmodSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mLoadmodInputChannel );
 
     // wait for second bit quarter
-    bit_changes += mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + ( mLoadmodSamplesPerBit * ( 2.0 / 4.0 ) ) ) );
+    loadmod_frame.frame_end_sample = seq_start_sample + U64( mLoadmodSamplesPerBit * ( 2.0 / 4.0 ) );
+    bit_changes += mLoadmodSerial->AdvanceToAbsPosition( loadmod_frame.frame_end_sample );
     if( ( bit_changes >= 6 ) && ( bit_changes <= 9 ) )
     {
         // modulation available
@@ -76,7 +75,8 @@ std::tuple<U8, U64> Iso14443aLoadmodAnalyzer::ReceiveLoadmodSeq( LoadmodFrame& l
     mResults->AddMarker( mLoadmodSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mLoadmodInputChannel );
 
     // wait for third bit quarter
-    bit_changes = mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + ( mLoadmodSamplesPerBit * ( 3.0 / 4.0 ) ) ) );
+    loadmod_frame.frame_end_sample = seq_start_sample + U64( mLoadmodSamplesPerBit * ( 3.0 / 4.0 ) );
+    bit_changes = mLoadmodSerial->AdvanceToAbsPosition( loadmod_frame.frame_end_sample );
 
     // save bit state in the middel of the bit half to check the state
     bit_state = mLoadmodSerial->GetBitState();
@@ -85,7 +85,8 @@ std::tuple<U8, U64> Iso14443aLoadmodAnalyzer::ReceiveLoadmodSeq( LoadmodFrame& l
     mResults->AddMarker( mLoadmodSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mLoadmodInputChannel );
 
     // wait for fourth bit quarter
-    bit_changes += mLoadmodSerial->AdvanceToAbsPosition( U64( seq_start_sample + mLoadmodSamplesPerBit ) );
+    loadmod_frame.frame_end_sample = seq_start_sample + U64( mLoadmodSamplesPerBit );
+    bit_changes += mLoadmodSerial->AdvanceToAbsPosition( loadmod_frame.frame_end_sample );
 
     if( ( bit_changes >= 6 ) && ( bit_changes <= 9 ) )
     {
