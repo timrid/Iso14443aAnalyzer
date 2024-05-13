@@ -78,7 +78,7 @@ std::tuple<U8, U64> Iso14443aAskAnalyzer::ReceiveAskSeq( AskFrame& ask_frame )
         frame.mType = FRAME_TYPE_VIEW_SEQUENCES_SEQUENCE;
         frame.mData1 = seq;
         frame.mStartingSampleInclusive = seq_start_sample;
-        frame.mEndingSampleInclusive = S64( seq_start_sample + mAskSamplesPerBit );
+        frame.mEndingSampleInclusive = S64( seq_start_sample + mAskSamplesPerBit ) - 1;
         mResults->AddFrame( frame );
         mResults->CommitResults();
         ReportProgress( frame.mEndingSampleInclusive );
@@ -129,7 +129,7 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameDa
 
 
     // last_bit must be 0, because a logic "0" followed by the start of communication must begin with SeqZ instead of SeqY
-    std::tuple<U8, U64> last_bit = { 0, ask_frame.frame_end_sample };
+    std::tuple<U8, U64> last_bit = { 0, ask_frame.frame_start_sample };
 
     while( true )
     {
@@ -220,7 +220,7 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameDa
         if( end_of_communication == true )
         {
             U64 eoc_starting_sample = std::get<1>( last_bit );
-            U64 eoc_ending_sample = U64( eoc_starting_sample + ( 2 * mAskSamplesPerBit ) ) - 1;
+            U64 eoc_ending_sample = U64( eoc_starting_sample + ( 2 * mAskSamplesPerBit ) );
             ask_frame.frame_end_sample = eoc_ending_sample;
 
             if( mAskOutputFormat == AskOutputFormat::Bytes )
@@ -228,7 +228,7 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameDa
                 Frame frame;
                 frame.mType = FRAME_TYPE_VIEW_BYTES_EOC;
                 frame.mStartingSampleInclusive = eoc_starting_sample;
-                frame.mEndingSampleInclusive = eoc_ending_sample;
+                frame.mEndingSampleInclusive = eoc_ending_sample - 1;
                 mResults->AddFrame( frame );
                 mResults->CommitResults();
                 ReportProgress( frame.mEndingSampleInclusive );
@@ -243,6 +243,8 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameDa
             bit_buffer.push_back( last_bit );
         }
     }
+
+    return ask_frame.error;
 }
 
 void Iso14443aAskAnalyzer::ReportAskFrame( AskFrame& ask_frame )
@@ -268,7 +270,7 @@ void Iso14443aAskAnalyzer::ReportAskFrame( AskFrame& ask_frame )
     };
     frameV2.AddString( "status", status );
     frameV2.AddInteger( "valid_bits_of_last_byte", ask_frame.data_valid_bits_in_last_byte );
-    mResults->AddFrameV2( frameV2, "ask_frame", ask_frame.frame_start_sample, ask_frame.frame_end_sample );
+    mResults->AddFrameV2( frameV2, "ask_frame", ask_frame.frame_start_sample, ask_frame.frame_end_sample - 1 );
 
     mResults->CommitResults();
     ReportProgress( ask_frame.frame_end_sample );
