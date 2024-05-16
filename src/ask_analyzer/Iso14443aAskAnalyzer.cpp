@@ -105,13 +105,15 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameSt
         return ask_frame.error;
     }
 
+    ask_frame.frame_data_start_sample = U64( ask_frame.frame_start_sample + mAskSamplesPerBit );
+
     // Save SOC
     if( mAskOutputFormat == AskOutputFormat::Bytes )
     {
         Frame frame;
         frame.mType = FRAME_TYPE_VIEW_BYTES_SOC;
         frame.mStartingSampleInclusive = ask_frame.frame_start_sample;
-        frame.mEndingSampleInclusive = U64( ask_frame.frame_start_sample + mAskSamplesPerBit ) - 1;
+        frame.mEndingSampleInclusive = ask_frame.frame_data_start_sample - 1;
         mResults->AddFrame( frame );
         mResults->CommitResults();
         ReportProgress( frame.mEndingSampleInclusive );
@@ -129,7 +131,8 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameDa
 
 
     // last_bit must be 0, because a logic "0" followed by the start of communication must begin with SeqZ instead of SeqY
-    std::tuple<U8, U64> last_bit = { 0, ask_frame.frame_start_sample };
+    std::tuple<U8, U64> last_bit = { 0, ask_frame.frame_data_start_sample };
+    bool last_bit_available{ false };
 
     while( true )
     {
@@ -139,12 +142,14 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameDa
         {
             // logic "1"
             last_bit = { 1, std::get<1>( seq ) };
+            last_bit_available = true;
         }
         else if( ( ( std::get<0>( last_bit ) == 0 ) && ( std::get<0>( seq ) == ASK_SEQ_Z ) ) ||
                  ( ( std::get<0>( last_bit ) == 1 ) && ( std::get<0>( seq ) == ASK_SEQ_Y ) ) )
         {
             // logic "0"
             last_bit = { 0, std::get<1>( seq ) };
+            last_bit_available = true;
         }
         else if( ( std::get<0>( last_bit ) == 0 ) && ( std::get<0>( seq ) == ASK_SEQ_Y ) )
         {
@@ -220,8 +225,21 @@ Iso14443aAskAnalyzer::AskFrame::AskError Iso14443aAskAnalyzer::ReceiveAskFrameDa
         if( end_of_communication == true )
         {
             U64 eoc_starting_sample = std::get<1>( last_bit );
-            U64 eoc_ending_sample = U64( eoc_starting_sample + ( 2 * mAskSamplesPerBit ) );
+            U64 eoc_ending_sample{ 0U };
+            if( last_bit_available )
+            {
+                // last bit is available, so the eoc is only one bit wide
+                eoc_ending_sample = U64( eoc_starting_sample + ( 2 * mAskSamplesPerBit ) );
+            }
+            else
+            {
+                // no last bit availabe, so the eoc is only one bit wide
+                eoc_ending_sample = U64( eoc_starting_sample + ( 1 * mAskSamplesPerBit ) );
+            }
+
+            // wait until the end of the frame
             ask_frame.frame_end_sample = eoc_ending_sample;
+            mAskSerial->AdvanceToAbsPosition( ask_frame.frame_end_sample );
 
             if( mAskOutputFormat == AskOutputFormat::Bytes )
             {
